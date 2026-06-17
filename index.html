@@ -298,14 +298,14 @@
       </div>
       <div style="width:120px;flex-shrink:0;">
         <label class="field-label" style="margin-bottom:5px;">学年<span class="required">*</span></label>
-        <select id="gakuNenSelect" data-required onchange="updateProgress();marc.grade=this.value;" style="margin:0;">
+        <select id="gakuNenSelect" data-required onchange="updateProgress();onGradeKumiChange();" style="margin:0;">
           <option value="">選択</option>
           <option>1年</option><option>2年</option><option>3年</option>
         </select>
       </div>
       <div style="width:100px;flex-shrink:0;">
         <label class="field-label" style="margin-bottom:5px;">組</label>
-        <input type="text" id="kumiInput" placeholder="2組" oninput="marc.kumi=this.value;" style="margin:0;">
+        <input type="text" id="kumiInput" placeholder="2組" oninput="onGradeKumiChange();" style="margin:0;">
       </div>
     </div>
 
@@ -972,6 +972,18 @@ function onNameInput(el) {
       fetchUserData(marc.name,marc.grade,marc.kumi,currentId);
     },1000);
   }
+}
+
+function onGradeKumiChange(){
+  marc.grade=document.getElementById('gakuNenSelect')?.value||'';
+  marc.kumi=document.getElementById('kumiInput')?.value||'';
+  if(!marc.name || marc.name.length<2) return;
+  marc._fetchId++;
+  clearTimeout(window._gradeTimer);
+  window._gradeTimer=setTimeout(function(){
+    const currentId=marc._fetchId;
+    fetchUserData(marc.name,marc.grade,marc.kumi,currentId);
+  },800);
 }
 
 function openDatePicker() {
