@@ -1,29 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <!-- ========================================
-  PWA設定 - MARCシート
-  以下を<head>内に追加してください
-======================================== -->
-
-<!-- manifest -->
-<link rel="manifest" href="manifest.json">
-
-<!-- テーマカラー -->
-<meta name="theme-color" content="#1a5fa8">
-
-<!-- iOS用 -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="MARCシート">
-<link rel="apple-touch-icon" href="icon-ios-180.png">
-<link rel="apple-touch-icon" sizes="152x152" href="icon-ios-152.png">
-<link rel="apple-touch-icon" sizes="167x167" href="icon-ios-167.png">
-<link rel="apple-touch-icon" sizes="1024x1024" href="icon-ios-1024.png">
-
-<!-- Android / 汎用 -->
-<link rel="icon" type="image/png" sizes="192x192" href="icon-android-192.png">
-<link rel="icon" type="image/png" sizes="512x512" href="icon-android-512.png">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>剣道部 MARCシート</title>
@@ -321,14 +298,14 @@
       </div>
       <div style="width:120px;flex-shrink:0;">
         <label class="field-label" style="margin-bottom:5px;">学年<span class="required">*</span></label>
-        <select id="gakuNenSelect" data-required onchange="updateProgress()" style="margin:0;">
+        <select id="gakuNenSelect" data-required onchange="updateProgress();marc.grade=this.value;" style="margin:0;">
           <option value="">選択</option>
           <option>1年</option><option>2年</option><option>3年</option>
         </select>
       </div>
       <div style="width:100px;flex-shrink:0;">
         <label class="field-label" style="margin-bottom:5px;">組</label>
-        <input type="text" id="kumiInput" placeholder="2組" style="margin:0;">
+        <input type="text" id="kumiInput" placeholder="2組" oninput="marc.kumi=this.value;" style="margin:0;">
       </div>
     </div>
 
@@ -909,6 +886,7 @@ window.selectFulfillment = function(v) {
 };
 
 function submitPreLog() {
+  marc.grade=document.getElementById('gakuNenSelect')?.value||marc.grade; marc.kumi=document.getElementById('kumiInput')?.value||marc.kumi;
   const name=marc.name,intent=(document.getElementById('logIntent')?.value||'').trim(),date=(document.getElementById('logDate')?.value||'').slice(0,10);
   if (!name)   { showToast('⚠ 先に「自己理解」タブで氏名を入力してください'); return; }
   if (!date)   { showToast('⚠ 稽古日を入力してください'); return; }
@@ -924,6 +902,7 @@ function submitPreLog() {
 }
 
 function submitLog() {
+  marc.grade=document.getElementById('gakuNenSelect')?.value||marc.grade; marc.kumi=document.getElementById('kumiInput')?.value||marc.kumi;
   const name=marc.name,date=(document.getElementById('logDate')?.value||'').slice(0,10);
   const scene=(document.getElementById('logScene')?.value||'').trim(),why=(document.getElementById('logWhy')?.value||'').trim(),next=(document.getElementById('logNext')?.value||'').trim();
   const decl=marc.declares[date]||{},intent=decl.intent||'';
