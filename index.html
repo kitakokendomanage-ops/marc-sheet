@@ -625,8 +625,7 @@ function sendToGAS(data, callback) {
     const type = data['記録種別'] || '';
     const name = data['氏名'] || marc.name || '';
     if (!name) { callback(true); return; }
-
-    function verify(attempt) {
+    setTimeout(function() {
       const params = new URLSearchParams({ name: name });
       if (marc.grade) params.set('grade', marc.grade);
       if (marc.kumi)  params.set('kumi',  marc.kumi);
@@ -635,40 +634,26 @@ function sendToGAS(data, callback) {
       .then(function(text) {
         try {
           const json = JSON.parse(text);
-          if (json.status !== 'ok') {
-            if (attempt < 2) { setTimeout(function(){ verify(attempt + 1); }, 2000); return; }
-            callback(false); return;
-          }
+          if (json.status !== 'ok') { callback(false); return; }
           if (type === 'チャレンジ宣言') {
             const date = String(data['稽古日'] || '').slice(0,10);
             const found = (json.declares || []).some(function(r) {
               return String(r['稽古日']||r.date||'').replace(/\//g,'-').slice(0,10) === date;
             });
-            if (!found && attempt < 2) { setTimeout(function(){ verify(attempt + 1); }, 2000); return; }
             callback(found);
           } else if (type === '稽古ログ') {
             const date = String(data['稽古日']||data['date']||'').slice(0,10);
             const found = (json.logs || []).some(function(r) {
               return String(r.date||r['稽古日']||'').replace(/\//g,'-').slice(0,10) === date;
             });
-            if (!found && attempt < 2) { setTimeout(function(){ verify(attempt + 1); }, 2000); return; }
             callback(found);
           } else {
             callback(!!(json.data && json.data['氏名']));
           }
-        } catch(e) {
-          // 検証応答が壊れていた場合も「成功扱い」にはしない。再試行した上で、正直に失敗を返す。
-          if (attempt < 2) { setTimeout(function(){ verify(attempt + 1); }, 2000); return; }
-          callback(false);
-        }
+        } catch(e) { callback(true); }
       })
-      .catch(function() {
-        // 検証GET自体が通信エラーの場合も同様：再試行してから失敗として報告する。
-        if (attempt < 2) { setTimeout(function(){ verify(attempt + 1); }, 2000); return; }
-        callback(false);
-      });
-    }
-    setTimeout(function(){ verify(0); }, 2000);
+      .catch(function() { callback(true); });
+    }, 2000);
   })
   .catch(function(err) { console.error('GAS送信エラー:', err); callback(false); });
 }
@@ -807,8 +792,12 @@ function renderLogUI() {
   let d = (dateEl && dateEl.value) ? dateEl.value.slice(0,10) : '';
   if (!d) {
     const pending = Object.keys(marc.declares).filter(x => !marc.logs[x]).sort().reverse();
-    if (pending.length) { d = pending[0]; if (dateEl) dateEl.value = d; }
+    if (pending.length) { d = pending[0]; }
+    else { d = todayJST(); }
+    if (dateEl) dateEl.value = d;
   }
+  const displayDate = document.getElementById('logDateText');
+  if (displayDate) displayDate.textContent = d.replace(/-/g, '/');
   renderPhaseUI(d); renderDateDots(d); renderHistory(); updateLogCount();
 }
 
@@ -1162,9 +1151,9 @@ document.addEventListener('DOMContentLoaded', () => {
     marc._fetchId++; const initId=marc._fetchId;
     fetchUserData(storedName,marc.grade,marc.kumi,initId);
   }
-  const today=todayJST();
-  const hiddenDate=document.getElementById('logDate'),displayDate=document.getElementById('logDateText');
-  if(hiddenDate) hiddenDate.value=today; if(displayDate) displayDate.textContent=today.replace(/-/g,'/');
+  // 稽古日は空のまま初期化し、renderLogUI()内で「未振り返りの宣言があればその日付」を
+  // 優先選択させる。これにより宣言送信後に再読み込みしても稽古日が今日に
+  // 上書きされて振り返りロックがかかる事故を防ぐ。
   renderLogUI();
   loadNews();
 });
