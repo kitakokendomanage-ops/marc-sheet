@@ -625,7 +625,8 @@ function sendToGAS(data, callback) {
     const type = data['記録種別'] || '';
     const name = data['氏名'] || marc.name || '';
     if (!name) { callback(true); return; }
-    setTimeout(function() {
+
+    function verify(attempt) {
       const params = new URLSearchParams({ name: name });
       if (marc.grade) params.set('grade', marc.grade);
       if (marc.kumi)  params.set('kumi',  marc.kumi);
@@ -634,26 +635,40 @@ function sendToGAS(data, callback) {
       .then(function(text) {
         try {
           const json = JSON.parse(text);
-          if (json.status !== 'ok') { callback(false); return; }
+          if (json.status !== 'ok') {
+            if (attempt < 2) { setTimeout(function(){ verify(attempt + 1); }, 2000); return; }
+            callback(false); return;
+          }
           if (type === 'チャレンジ宣言') {
             const date = String(data['稽古日'] || '').slice(0,10);
             const found = (json.declares || []).some(function(r) {
               return String(r['稽古日']||r.date||'').replace(/\//g,'-').slice(0,10) === date;
             });
+            if (!found && attempt < 2) { setTimeout(function(){ verify(attempt + 1); }, 2000); return; }
             callback(found);
           } else if (type === '稽古ログ') {
             const date = String(data['稽古日']||data['date']||'').slice(0,10);
             const found = (json.logs || []).some(function(r) {
               return String(r.date||r['稽古日']||'').replace(/\//g,'-').slice(0,10) === date;
             });
+            if (!found && attempt < 2) { setTimeout(function(){ verify(attempt + 1); }, 2000); return; }
             callback(found);
           } else {
             callback(!!(json.data && json.data['氏名']));
           }
-        } catch(e) { callback(true); }
+        } catch(e) {
+          // 検証応答が壊れていた場合も「成功扱い」にはしない。再試行した上で、正直に失敗を返す。
+          if (attempt < 2) { setTimeout(function(){ verify(attempt + 1); }, 2000); return; }
+          callback(false);
+        }
       })
-      .catch(function() { callback(true); });
-    }, 2000);
+      .catch(function() {
+        // 検証GET自体が通信エラーの場合も同様：再試行してから失敗として報告する。
+        if (attempt < 2) { setTimeout(function(){ verify(attempt + 1); }, 2000); return; }
+        callback(false);
+      });
+    }
+    setTimeout(function(){ verify(0); }, 2000);
   })
   .catch(function(err) { console.error('GAS送信エラー:', err); callback(false); });
 }
