@@ -1,588 +1,1180 @@
-// ============================================================
-//  MARCプログラム — 顧問ダッシュボード用 GAS v6
-//  SHEET_ID: MARCプログラム用新規シート
-// ============================================================
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>剣道部 MARCシート</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700;900&display=swap');
 
-const SHEET_ID     = '1ow7ONiTbzscnTYCx5LWW-18X8zo-mFBszccwk4sjknU';
-const NOTIFY_EMAIL = '';  // 顧問メアド（空白なら通知なし）
-const WRITE_TOKEN  = 'marc2025SagaKendo'; // フロントHTMLのWRITE_TOKENと同じ値
-
-function makeCorsResponse(obj) {
-  return jsonResponse(obj);
-}
-
-function normalizeName(name) {
-  if (!name) return '';
-  return String(name).replace(/[\u3000\s]+/g, '').trim();
-}
-
-function makeUserKey(data) {
-  const name  = normalizeName(data['氏名'] || '未記入');
-  const grade = String(data['学年'] || '').replace(/\s/g, '');
-  const kumi  = String(data['組'] || '').replace(/\s/g, '');
-  if (grade) return name + '_' + grade + (kumi ? '_' + kumi : '');
-  return name;
-}
-
-function doGet(e) {
-  const params   = e.parameter || {};
-  const callback = params.callback || null;
-  try {
-    if (params.action === 'getAll') return handleGetAll(params, callback);
-    if (params.action === 'getNews') return handleGetNews(callback);
-    if (params.action === 'getNewsMonth') return handleGetNewsMonth(params, callback);
-    if (params.action === 'addEvent') return handleAddEvent(params, callback);
-    if (params.action === 'deleteEvent') return handleDeleteEvent(params, callback);
-    if (!params.name) {
-      const msg = 'MARCプログラム ダッシュボード GAS v6 — OK';
-      return callback
-        ? jsonpResponse({ status: 'ok', message: msg }, callback)
-        : jsonResponse({ status: 'ok', message: msg });
-    }
-    return handleGetUserAll(params.name, params.grade || '', params.kumi || '', callback, params.debug === '1');
-  } catch (err) {
-    const errObj = { status: 'error', message: err.message };
-    return callback ? jsonpResponse(errObj, callback) : jsonResponse(errObj);
+  :root {
+    --ink:        #0d1117;
+    --ink-soft:   #3d4451;
+    --ink-muted:  #6b7280;
+    --bg:         #f9f7f4;
+    --bg-warm:    #f2efe9;
+    --surface:    #ffffff;
+    --surface-2:  #faf9f7;
+    --border:     #e8e2d9;
+    --border-soft:#f0ebe3;
+    --primary:    #1a3a6b;
+    --primary-lt: #2a5298;
+    --gold:       #b8960c;
+    --gold-lt:    #d4ad1a;
+    --gold-pale:  #fdf6dc;
+    --red:        #c0392b;
+    --shadow-sm:  0 1px 4px rgba(13,17,23,0.06), 0 1px 2px rgba(13,17,23,0.04);
+    --shadow-md:  0 4px 16px rgba(13,17,23,0.08), 0 2px 6px rgba(13,17,23,0.05);
+    --shadow-lg:  0 12px 40px rgba(13,17,23,0.12), 0 4px 12px rgba(13,17,23,0.06);
+    --radius-sm:  8px;
+    --radius-md:  14px;
+    --radius-lg:  20px;
+    --radius-xl:  28px;
   }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    padding: 28px 16px 48px;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  .wrapper { max-width: 820px; margin: 0 auto; padding: 0 4px; }
+
+  input[type="text"], input[type="date"], input[type="email"], textarea, select {
+    font-size: 16px !important;
+    font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif !important;
+  }
+
+  input[type="date"] { min-width: 0; width: 100%; -webkit-appearance: none; appearance: none; }
+  button { min-height: 44px; }
+
+  .header {
+    text-align: center; margin-bottom: 28px;
+    background: var(--surface); border-radius: var(--radius-xl);
+    padding: 40px 32px 32px; box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-soft); position: relative; overflow: hidden;
+    animation: fadeDown 0.7s cubic-bezier(.22,1,.36,1) both;
+  }
+  .header::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--primary) 0%, var(--gold) 50%, var(--primary) 100%);
+  }
+  .header-kamon { width: 52px; height: 52px; margin: 0 auto 14px; display: block; opacity: 0.85; }
+  .header-en { font-size: 10px; letter-spacing: 0.45em; color: var(--gold); margin-bottom: 10px; font-weight: 500; text-transform: uppercase; }
+  .header-title { font-family: 'Noto Serif JP', 'Georgia', serif; font-size: clamp(24px, 5vw, 34px); font-weight: 900; color: var(--ink); letter-spacing: 0.06em; margin-bottom: 8px; line-height: 1.2; }
+  .header-title span { color: var(--primary); }
+  .header-subtitle { font-size: 10px; color: var(--ink-muted); letter-spacing: 0.2em; margin-bottom: 20px; font-weight: 300; }
+  .progress-track { width: 100%; height: 3px; background: var(--border); border-radius: 999px; margin-top: 16px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--gold)); border-radius: 999px; transition: width 0.5s cubic-bezier(.22,1,.36,1); width: 0%; }
+  .progress-label { font-size: 11px; color: var(--ink-muted); margin-top: 6px; letter-spacing: 0.1em; }
+
+  .section { background: var(--surface); border-radius: var(--radius-lg); margin-bottom: 14px; overflow: hidden; box-shadow: var(--shadow-sm); border: 1px solid var(--border-soft); animation: fadeUp 0.5s cubic-bezier(.22,1,.36,1) both; transition: box-shadow 0.2s; }
+  .section:hover { box-shadow: var(--shadow-md); }
+  .section-header { display: flex; align-items: center; gap: 14px; padding: 16px 20px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-lt) 100%); cursor: pointer; user-select: none; transition: filter 0.2s; }
+  .section-header:hover { filter: brightness(1.06); }
+  .section-number { width: 32px; height: 32px; border: 1.5px solid rgba(255,255,255,0.4); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Noto Serif JP', serif; font-size: 13px; color: rgba(255,255,255,0.9); flex-shrink: 0; font-weight: 700; }
+  .section-title { font-size: 15px; font-weight: 700; color: #ffffff; letter-spacing: 0.04em; flex: 1; }
+  .section-toggle { font-size: 16px; color: rgba(255,255,255,0.7); transition: transform 0.25s cubic-bezier(.22,1,.36,1); }
+  .section-toggle.open { transform: rotate(0deg); }
+  .section-toggle.closed { transform: rotate(-90deg); }
+  .section-body { padding: 22px 20px; background: var(--surface); }
+  .section-body.collapsed { display: none; }
+
+  .field-group { margin-bottom: 18px; }
+  .field-label { display: block; font-size: 11px; font-weight: 700; color: var(--ink-soft); margin-bottom: 7px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .field-hint { font-size: 12px; color: var(--ink-muted); margin-bottom: 7px; line-height: 1.6; font-weight: 300; }
+  .required { color: var(--red); margin-left: 2px; }
+
+  input[type=text], input[type=date], input[type=month], select, textarea {
+    width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    color: var(--ink); background: var(--surface); transition: all 0.2s; outline: none;
+    -webkit-appearance: none; line-height: 1.5;
+  }
+  input[type=text]:focus, input[type=date]:focus, input[type=month]:focus, select:focus, textarea:focus {
+    border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26,58,107,0.08); background: #fff;
+  }
+  textarea { resize: vertical; min-height: 80px; line-height: 1.75; }
+  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  @media (max-width: 580px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+  @media (max-width: 480px) { .header-title { font-size: 22px; } .field-label { font-size: 13px; } textarea { min-height: 80px; } .submit-btn { font-size: 15px; padding: 16px; } }
+
+  .rank-selector { display: flex; flex-wrap: wrap; gap: 8px; }
+  .rank-btn { padding: 7px 16px; border: 1.5px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--ink-soft); font-size: 13px; font-family: 'Noto Sans JP', sans-serif; cursor: pointer; transition: all 0.18s; font-weight: 500; }
+  .rank-btn:hover:not(.active) { border-color: var(--primary); color: var(--primary); background: rgba(26,58,107,0.04); }
+  .rank-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 700; box-shadow: 0 2px 8px rgba(26,58,107,0.25); }
+
+  .divider { display: flex; align-items: center; gap: 12px; margin: 18px 0; }
+  .divider-line { flex: 1; height: 1px; background: var(--border); }
+  .divider-text { font-size: 10px; letter-spacing: 0.2em; color: var(--ink-muted); white-space: nowrap; text-transform: uppercase; font-weight: 700; }
+
+  .submit-area { text-align: center; padding: 28px 20px; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px; background: var(--surface); border-radius: var(--radius-lg); margin-top: 8px; border: 1px solid var(--border-soft); box-shadow: var(--shadow-sm); position: relative; overflow: hidden; }
+  .submit-area::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--primary), var(--gold), var(--primary)); }
+  .submit-btn { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-lt) 100%); color: #fff; border: none; padding: 14px 36px; border-radius: 999px; font-family: 'Noto Sans JP', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.06em; cursor: pointer; transition: all 0.25s; box-shadow: 0 4px 16px rgba(26,58,107,0.3); }
+  .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(26,58,107,0.35); filter: brightness(1.05); }
+  .submit-btn:active { transform: translateY(0); }
+  .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .save-btn { background: var(--surface); color: var(--primary); border: 1.5px solid var(--primary); padding: 13px 24px; border-radius: 999px; font-family: 'Noto Sans JP', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .save-btn:hover { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(26,58,107,0.2); }
+  .print-btn { background: transparent; color: var(--ink-muted); border: 1px solid var(--border); padding: 13px 20px; border-radius: 999px; font-family: 'Noto Sans JP', sans-serif; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+  .print-btn:hover { background: var(--bg-warm); color: var(--ink-soft); }
+
+  .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--ink); color: #fff; padding: 12px 24px; border-radius: 999px; font-size: 13px; box-shadow: var(--shadow-lg); transition: transform 0.3s cubic-bezier(.22,1,.36,1); z-index: 999; white-space: nowrap; font-weight: 500; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  .char-count { font-size: 11px; color: var(--ink-muted); text-align: right; margin-top: 4px; }
+
+  @keyframes fadeDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+  @media print { body { background: white; padding: 0; } .section { box-shadow: none; border: 1px solid #ddd; } .section-body.collapsed { display: block !important; } .submit-area, .save-btn, .print-btn, .add-row-btn, .del-btn { display: none !important; } .progress-track { display: none; } }
+
+  .tab-bar { display: flex; background: var(--surface); border-radius: var(--radius-xl); padding: 6px; margin-bottom: 20px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-soft); gap: 6px; position: sticky; top: 12px; z-index: 100; }
+  .tab-btn { flex: 1; padding: 12px 6px; border: none; border-radius: var(--radius-lg); background: transparent; font-family: 'Noto Sans JP', sans-serif; font-size: 12px; font-weight: 700; color: var(--ink-muted); cursor: pointer; transition: all 0.22s cubic-bezier(.22,1,.36,1); letter-spacing: .02em; display: flex; align-items: center; justify-content: center; gap: 4px; min-height: 44px; -webkit-tap-highlight-color: transparent; white-space: nowrap; }
+  .tab-btn.active { background: var(--primary); color: #fff; box-shadow: 0 2px 10px rgba(26,58,107,0.25); }
+  .tab-btn:not(.active):hover { background: var(--bg-warm); color: var(--ink-soft); }
+  .tab-panel { display: none; }
+  .tab-panel.tab-active { display: block; }
+
+  .timeline-card { position: relative; border-radius: var(--radius-lg); margin-bottom: 12px; overflow: hidden; transition: all .3s cubic-bezier(.22,1,.36,1); }
+  .timeline-header { display: flex; align-items: center; gap: 12px; padding: 14px 18px; }
+  .timeline-step-badge { width: 36px; height: 36px; flex-shrink: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; transition: all .3s; }
+  .timeline-step-badge.active { background: var(--primary); color: #fff; box-shadow: 0 2px 8px rgba(26,58,107,0.3); }
+  .timeline-step-badge.locked { background: var(--bg-warm); color: var(--ink-muted); border: 2px solid var(--border); }
+  .timeline-step-badge.done { background: #059669; color: #fff; }
+  .timeline-title { flex: 1; }
+  .timeline-title-main { font-size: 14px; font-weight: 700; letter-spacing: .03em; }
+  .timeline-title-sub { font-size: 10px; letter-spacing: .05em; margin-top: 2px; }
+  .timeline-status-tag { font-size: 10px; font-weight: 700; letter-spacing: .08em; padding: 3px 10px; border-radius: 999px; }
+  .timeline-body { padding: 0 18px 18px; }
+  .timeline-body.locked-body { padding: 12px 18px; display: flex; align-items: center; gap: 10px; color: var(--ink-muted); font-size: 13px; }
+  .timeline-card.phase-active { border: 2px solid var(--primary); background: var(--surface); box-shadow: var(--shadow-md); }
+  .timeline-card.phase-locked { border: 1.5px solid var(--border); background: var(--bg-warm); opacity: .75; }
+  .timeline-card.phase-done { border: 2px solid #059669; background: #F0FDF4; box-shadow: var(--shadow-sm); }
+
+  .pre-submit-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--primary), var(--primary-lt)); color: #fff; border: none; border-radius: var(--radius-md); font-family: 'Noto Sans JP', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; transition: all .2s; letter-spacing: .04em; margin-top: 14px; box-shadow: 0 3px 12px rgba(26,58,107,0.25); }
+  .pre-submit-btn:hover { filter: brightness(1.07); transform: translateY(-1px); }
+  .pre-submit-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+  .post-submit-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #059669, #047857); color: #fff; border: none; border-radius: var(--radius-md); font-family: 'Noto Sans JP', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; transition: all .2s; letter-spacing: .04em; margin-top: 14px; box-shadow: 0 3px 12px rgba(5,150,105,0.25); }
+  .post-submit-btn:hover { filter: brightness(1.07); transform: translateY(-1px); }
+  .post-submit-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+  .fulfillment-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-top:6px; }
+  .fulfillment-btn { padding:10px 4px; border:1.5px solid #dde4f0; border-radius:10px; background:#fff; color:#3d5278; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer; text-align:center; line-height:1.4; transition:all .15s; -webkit-tap-highlight-color:transparent; touch-action:manipulation; display:block; width:100%; }
+  .fulfillment-btn:active { transform:scale(.97); }
+  .fulfillment-btn[data-val="1"].selected { background:#FEE2E2; border-color:#EF4444; color:#DC2626; font-weight:700; }
+  .fulfillment-btn[data-val="2"].selected { background:#FEF3C7; border-color:#F59E0B; color:#D97706; font-weight:700; }
+  .fulfillment-btn[data-val="3"].selected { background:#FEF9C3; border-color:#EAB308; color:#A16207; font-weight:700; }
+  .fulfillment-btn[data-val="4"].selected { background:#DCFCE7; border-color:#4ADE80; color:#16A34A; font-weight:700; }
+  .fulfillment-btn[data-val="5"].selected { background:#BBF7D0; border-color:#22C55E; color:#15803D; font-weight:700; }
+
+  .bars-group { margin-bottom: 28px; }
+  .bars-group-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 2px solid var(--border); }
+  .bars-group-icon { font-size: 16px; }
+  .bars-group-label { font-family: 'Noto Serif JP', serif; font-size: 14px; font-weight: 700; letter-spacing: .08em; }
+  .bars-item { background: var(--surface-2); border: 1px solid var(--border-soft); border-radius: var(--radius-md); padding: 16px; margin-bottom: 12px; transition: box-shadow .2s; }
+  .bars-item:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
+  .bars-item-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+  .bars-item-info { flex: 1; min-width: 200px; }
+  .bars-item-name { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 4px; letter-spacing: .04em; }
+  .bars-item-hint { font-size: 11px; color: var(--ink-muted); line-height: 1.65; font-weight: 300; }
+  .bars-stars { display: flex; gap: 4px; flex-shrink: 0; align-items: center; padding-top: 2px; }
+  .bars-star { font-size: 24px; color: var(--border); cursor: pointer; transition: all .15s; line-height: 1; user-select: none; }
+  .bars-star.lit { color: var(--gold); }
+  .bars-star:hover { transform: scale(1.2); }
+  .bars-anchor-panel { margin-top: 10px; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border); }
+  .bars-anchor-row { display: flex; align-items: stretch; border-bottom: 1px solid var(--border-soft); transition: background .15s; }
+  .bars-anchor-row:last-child { border-bottom: none; }
+  .bars-anchor-row.selected { background: var(--gold-pale); }
+  .bars-anchor-num { width: 36px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--ink-muted); border-right: 1px solid var(--border-soft); background: var(--bg-warm); gap: 1px; }
+  .bars-anchor-num .mini-star { font-size: 9px; color: var(--border); line-height: 1; }
+  .bars-anchor-num .mini-star.lit { color: var(--gold); }
+  .bars-anchor-text { flex: 1; padding: 8px 12px; font-size: 12px; color: var(--ink-soft); line-height: 1.6; }
+  .bars-anchor-row.selected .bars-anchor-text { color: var(--ink); font-weight: 500; }
+  .bars-selected-label { font-size: 11px; color: var(--ink-muted); margin-top: 8px; text-align: right; min-height: 16px; letter-spacing: .04em; }
+  .bars-selected-label span { color: var(--gold); font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <div class="header">
+    <svg class="header-kamon" viewBox="0 0 64 64" fill="none">
+      <circle cx="32" cy="32" r="30" stroke="#1a3a6b" stroke-width="1.5"/>
+      <circle cx="32" cy="32" r="24" stroke="#1a3a6b" stroke-width="0.5" stroke-dasharray="3 3"/>
+      <line x1="16" y1="48" x2="48" y2="16" stroke="#1a3a6b" stroke-width="2" stroke-linecap="round"/>
+      <line x1="16" y1="16" x2="48" y2="48" stroke="#1a3a6b" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="32" cy="32" r="4" fill="#1a3a6b"/>
+      <circle cx="32" cy="32" r="2" fill="#f9f7f4"/>
+    </svg>
+    <div class="header-en">KENDO CLUB — MARC SHEET</div>
+    <h1 class="header-title">剣道部 <span>MARC</span>シート</h1>
+    <div class="header-subtitle">思考とAIの架け橋</div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-label" id="progressLabel">記入率 0%</div>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('news', this)">📣 お知らせ</button>
+    <button class="tab-btn" onclick="switchTab('profile', this)">👤 自己理解（現在地）</button>
+    <button class="tab-btn" onclick="switchTab('log', this)">⚔ 稽古ログ（目的地）</button>
+  </div>
+
+  <!-- お知らせタブ -->
+  <div class="tab-panel tab-active" id="tab-news">
+
+    <!-- カレンダー -->
+    <div style="background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border-soft);box-shadow:var(--shadow-sm);padding:16px 20px;margin-bottom:14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;color:var(--primary);letter-spacing:.04em;">📅 お知らせ・予定</div>
+        <button onclick="toggleCalAdd()" style="background:var(--primary);color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;">＋ 予定を追加</button>
+      </div>
+
+      <!-- 予定リスト（GASから動的取得） -->
+      <div id="cal-events" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px;">
+        <div style="font-size:12px;color:var(--ink-muted);">読み込み中…</div>
+      </div>
+
+      <!-- カレンダーを開くリンク（小さく） -->
+      <a href="https://calendar.google.com/calendar/r?cid=4b6e31801f7793e4f7384f523e9f0453747e6c45c42e6f1278f39eddb062a77f%40group.calendar.google.com" target="_blank" style="font-size:11px;color:var(--ink-muted);text-decoration:none;display:flex;align-items:center;gap:4px;margin-bottom:12px;">
+        <span style="font-size:12px;">📅</span> カレンダーを開く
+      </a>
+
+      <!-- 区切り線 -->
+      <div style="border-top:1px solid var(--border-soft);margin-bottom:12px;"></div>
+
+      <!-- 予定追加フォーム（トグル） -->
+      <div id="cal-add-form" style="display:none;border-top:1px solid var(--border-soft);padding-top:14px;margin-top:4px;">
+        <div style="font-size:11px;font-weight:700;color:var(--ink-muted);letter-spacing:.06em;margin-bottom:8px;">新しい予定</div>
+        <input type="text" id="cal-title" placeholder="予定のタイトル" style="width:100%;margin-bottom:8px;">
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+          <input type="date" id="cal-date" style="flex:1;">
+          <input type="time" id="cal-time" style="flex:1;">
+        </div>
+        <button onclick="addToCalendar()" style="width:100%;padding:12px;background:#007AFF;color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;">Googleカレンダーに追加</button>
+      </div>
+    </div>
+
+    <!-- ミーティング議題 -->
+    <div style="background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border-soft);box-shadow:var(--shadow-sm);padding:16px 20px;margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:700;color:var(--primary);letter-spacing:.04em;margin-bottom:12px;">📋 ミーティング議題</div>
+      <div style="border:1px solid var(--border-soft);border-radius:var(--radius-md);padding:12px 14px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <div style="background:var(--primary);color:#fff;border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0;">次回</div>
+          <div class="meeting-date-label" style="font-size:13px;color:var(--ink);font-weight:600;">—</div>
+        </div>
+        <div id="meeting-agenda" style="background:var(--bg-warm);border-left:3px solid var(--primary);border-radius:0 6px 6px 0;padding:7px 10px;">
+          <div style="font-size:10px;font-weight:700;color:var(--primary);margin-bottom:2px;letter-spacing:.06em;">議題</div>
+          <div style="font-size:12px;color:var(--ink-muted);line-height:1.8;">読み込み中…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- チーム編成 -->
+    <div style="background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border-soft);box-shadow:var(--shadow-sm);padding:16px 20px;margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:700;color:var(--primary);letter-spacing:.04em;margin-bottom:12px;">👥 チーム編成</div>
+      <div id="team-list">
+      </div>
+    </div>
+
+    <!-- 公式YouTubeチャンネル -->
+    <a href="https://www.youtube.com/playlist?list=PLaCgUQbYk-3tobGTbN1HPRPSBT7i8c5vS" target="_blank" style="display:flex;align-items:center;gap:14px;background:#FF0000;color:#fff;border-radius:var(--radius-lg);padding:14px 18px;margin-bottom:14px;text-decoration:none;box-shadow:var(--shadow-sm);">
+      <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="36" height="36" rx="8" fill="rgba(255,255,255,0.2)"/>
+        <path d="M29.4 13.2C29.1 12.1 28.2 11.2 27.1 10.9C25.1 10.4 18 10.4 18 10.4C18 10.4 10.9 10.4 8.9 10.9C7.8 11.2 6.9 12.1 6.6 13.2C6.1 15.2 6.1 18 6.1 18C6.1 18 6.1 20.8 6.6 22.8C6.9 23.9 7.8 24.8 8.9 25.1C10.9 25.6 18 25.6 18 25.6C18 25.6 25.1 25.6 27.1 25.1C28.2 24.8 29.1 23.9 29.4 22.8C29.9 20.8 29.9 18 29.9 18C29.9 18 29.9 15.2 29.4 13.2Z" fill="white"/>
+        <path d="M15.6 21.6L21.9 18L15.6 14.4V21.6Z" fill="#FF0000"/>
+      </svg>
+      <div>
+        <div style="font-size:13px;font-weight:700;letter-spacing:.04em;">公式YouTubeを見る</div>
+        <div style="font-size:11px;opacity:.85;margin-top:2px;">限定公開プレイリスト｜URLを知っている人のみ視聴できます</div>
+      </div>
+      <div style="margin-left:auto;font-size:18px;opacity:.8;">›</div>
+    </a>
+
+  </div>
+
+  <div class="tab-panel" id="tab-profile">
+
+    <div style="background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border-soft);box-shadow:var(--shadow-sm);padding:16px 20px;margin-bottom:14px;display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+      <div style="flex:1;min-width:160px;">
+        <label class="field-label" style="margin-bottom:5px;">氏名<span class="required">*</span></label>
+        <div class="field-hint" style="margin-bottom:5px;">入力後1秒でデータを復元します</div>
+        <input type="text" id="nameInput" placeholder="山田 一郎" data-required oninput="onNameInput(this)" style="margin:0;">
+      </div>
+      <div style="width:120px;flex-shrink:0;">
+        <label class="field-label" style="margin-bottom:5px;">学年<span class="required">*</span></label>
+        <select id="gakuNenSelect" data-required onchange="updateProgress();onGradeKumiChange();" style="margin:0;">
+          <option value="">選択</option>
+          <option>1年</option><option>2年</option><option>3年</option>
+        </select>
+      </div>
+      <div style="width:100px;flex-shrink:0;">
+        <label class="field-label" style="margin-bottom:5px;">組</label>
+        <input type="text" id="kumiInput" placeholder="2組" oninput="onGradeKumiChange();" style="margin:0;">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-number">一</div>
+        <div class="section-title">基本情報・自己理解</div>
+        <div class="section-toggle open">▾</div>
+      </div>
+      <div class="section-body">
+        <div class="grid-2">
+          <div class="field-group">
+            <label class="field-label">段位・級</label>
+            <select id="dankyuSelect">
+              <option value="">選択</option>
+              <option>無段</option><option>初段</option><option>二段</option><option>三段</option>
+              <option>1級</option><option>2級</option><option>3級</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label">剣道歴</label>
+            <input type="text" id="kendoReki" placeholder="7年（小学1年から）">
+          </div>
+          <div class="field-group">
+            <label class="field-label">利き手・構え</label>
+            <select id="kikiteSelect">
+              <option value="">選択</option>
+              <option>右利き（上段）</option><option>右利き（中段）</option>
+              <option>左利き（中段）</option><option>二刀流</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label">記入日</label>
+            <input type="date" id="recordDate" style="min-width:150px;width:100%;">
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">得意技（最大3つ）</label>
+          <div class="rank-selector" id="wazaSelector">
+            <button class="rank-btn" onclick="toggleWaza(this)">面</button>
+            <button class="rank-btn" onclick="toggleWaza(this)">小手</button>
+            <button class="rank-btn" onclick="toggleWaza(this)">胴</button>
+            <button class="rank-btn" onclick="toggleWaza(this)">突き</button>
+            <button class="rank-btn" onclick="toggleWaza(this)">引き面</button>
+            <button class="rank-btn" onclick="toggleWaza(this)">出小手</button>
+            <button class="rank-btn" onclick="toggleWaza(this)">逆胴</button>
+            <button class="rank-btn" onclick="toggleWaza(this)">払い面</button>
+          </div>
+        </div>
+
+        <div class="divider"><div class="divider-line"></div><div class="divider-text">現状自己評価（BARS方式）</div><div class="divider-line"></div></div>
+
+        <div style="background:var(--gold-pale);border:1px solid rgba(184,150,12,0.25);border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:20px;font-size:12px;color:var(--ink-soft);line-height:1.7;">
+          <strong style="color:var(--gold);display:block;margin-bottom:4px;">★ の選び方について</strong>
+          星を選ぶとき「なんとなく自分は中くらい」という感覚ではなく、<strong>各レベルに書いてある「行動の説明」と照らし合わせて選んでください。</strong>正直な自己評価がAIの精度を高め、自分に合った稽古提案につながります。
+        </div>
+
+        <div id="barsEvalContainer"></div>
+
+        <div class="divider"><div class="divider-line"></div><div class="divider-text">今の課題と目標（1年後のイメージ）</div><div class="divider-line"></div></div>
+
+        <div class="field-group">
+          <label class="field-label" for="kadaikan">今の剣道で一番変えたいこと</label>
+          <div class="field-hint">
+            「うまくいかない」「試合でできない」「なぜかわからないけど苦手」——そういう感覚をそのまま書いてください。技術・精神・体力、どの角度からでも構いません。ここに書いた内容をもとに、AIが稽古の提案をします。<br>
+            <span style="color:var(--gold);font-weight:500;">例：「出ばなのタイミングが全然わからない。攻めているつもりなのに相手が動かない。」</span>
+          </div>
+          <textarea id="kadaikan" placeholder="" style="min-height:90px" oninput="updateProgress();document.getElementById('kadaikanCount').textContent=this.value.length+' / 200文字'"></textarea>
+          <div class="char-count" id="kadaikanCount">0 / 200文字</div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="kojinMokuhyo">稽古を通して身につけたいこと</label>
+          <div class="field-hint">
+            <strong style="color:var(--primary);">1年後の自分をイメージして書いてください。</strong>「試合に勝つ」ではなく、<strong>「どんな剣道ができるようになりたいか」</strong>を書いてください。稽古の中で変えていける、具体的な行動・技術の言葉で書くほど、AIの提案が的確になります。<br>
+            <span style="color:var(--gold);font-weight:500;">例：「出ばな小手を意図して打てるようになる」「攻めで相手を動かしてから打つ剣道を身につける」</span>
+          </div>
+          <input type="text" id="kojinMokuhyo" placeholder="" oninput="updateProgress()">
+          <div class="field-hint" style="margin-top:6px;font-size:10px;color:var(--ink-muted);">
+            💡 「〜を身につける」「〜ができるようになる」という形で書くと、稽古の振り返りに使いやすくなります
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="submit-area">
+      <button class="submit-btn" onclick="submitForm('jiko')">✦ 自己理解シートを提出する</button>
+      <button class="save-btn" onclick="tempSave()">📋 一時保存</button>
+      <button class="print-btn" onclick="window.print()">🖨 印刷</button>
+    </div>
+
+    <div style="text-align:center;margin-top:12px;">
+      <button onclick="generatePrint()" style="background:none;border:1px solid var(--border);color:var(--ink-muted);padding:10px 20px;border-radius:999px;font-size:12px;font-family:'Noto Sans JP',sans-serif;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='var(--bg-warm)'" onmouseout="this.style.background='none'">
+        📋 顧問用：振り返り一覧を生成
+      </button>
+    </div>
+
+  </div>
+
+  <div class="tab-panel" id="tab-log">
+    <div id="logInputArea">
+      <div style="background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border-soft);box-shadow:var(--shadow-sm);padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:140px;">
+          <label class="field-label" style="margin-bottom:5px;">稽古日<span class="required">*</span></label>
+          <div style="font-size:10px;color:var(--ink-muted);margin-bottom:4px;">稽古を行った当日の日付を入力してください</div>
+          <input type="hidden" id="logDate" value="">
+          <div id="logDateDisplay" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:16px;color:var(--ink);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:space-between;" onclick="openDatePicker()">
+            <span id="logDateText">今日の日付を選択</span>
+            <span style="font-size:12px;color:var(--ink-muted);">📅</span>
+          </div>
+          <input type="date" id="logDateNative" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0;" onchange="onNativeDateChange(this.value)">
+        </div>
+        <div style="flex-shrink:0;text-align:right;">
+          <div style="font-size:10px;color:var(--ink-muted);letter-spacing:.06em;margin-bottom:2px;">記録者</div>
+          <div id="logUserName" style="font-size:13px;font-weight:700;color:var(--primary);">—</div>
+          <div style="font-size:10px;color:var(--ink-muted);margin-top:4px;letter-spacing:.06em;">記録数</div>
+          <div id="logCount" style="font-size:14px;font-weight:700;color:var(--primary);">— 件</div>
+        </div>
+      </div>
+      <div id="dateDotList" style="margin-bottom:10px;"></div>
+
+      <div style="position:relative;">
+        <div class="timeline-card phase-active" id="phase1Card">
+          <div class="timeline-header">
+            <div class="timeline-step-badge active" id="phase1Badge">1</div>
+            <div class="timeline-title">
+              <div class="timeline-title-main" style="color:var(--primary);">稽古前 — チャレンジ宣言</div>
+              <div class="timeline-title-sub" style="color:var(--primary);">今の自分にとって、少し頑張れば届く内容になるよう記入</div>
+            </div>
+            <div class="timeline-status-tag" id="phase1StatusTag" style="background:var(--primary);color:#fff;">入力中</div>
+          </div>
+          <div class="timeline-body" id="phase1Body">
+            <div class="field-group">
+              <label class="field-label">次回の稽古で試したいこと<span class="required">*</span></label>
+              <div class="field-hint">
+                <strong>「〜の時、〜する」の形で書くと、稽古中に自然に思い出せます。</strong><br>
+                <span style="color:var(--primary);font-weight:600;">✓ 「相手が出てきた瞬間に、小手を合わせる」</span>
+              </div>
+              <input type="text" id="logIntent" placeholder="" oninput="autoSaveIntent(this.value)" style="border-color:var(--primary);">
+            </div>
+            <button class="pre-submit-btn" id="preSubmitBtn" onclick="submitPreLog()">✦ チャレンジを宣言する</button>
+          </div>
+        </div>
+
+        <div style="width:2px;height:16px;background:var(--border);margin:0 auto 0 23px;"></div>
+
+        <div class="timeline-card phase-locked" id="phase2Card">
+          <div class="timeline-header">
+            <div class="timeline-step-badge locked" id="phase2Badge">2</div>
+            <div class="timeline-title">
+              <div class="timeline-title-main" style="color:var(--ink-muted);">稽古後 — 振り返り</div>
+              <div class="timeline-title-sub" style="color:var(--ink-muted);">稽古後に記入・提出してください</div>
+            </div>
+            <div class="timeline-status-tag" id="phase2StatusTag" style="background:var(--bg-warm);color:var(--ink-muted);border:1px solid var(--border);">🔒 宣言後に解除</div>
+          </div>
+          <div class="timeline-body locked-body" id="phase2Body">
+            <span style="font-size:20px;">🔒</span>
+            <span>「チャレンジを宣言する」を送信すると入力できます</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="logHistory" style="margin-top:16px;"></div>
+  </div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ★ GAS URL を新しいものに更新済み
+const GAS_URL     = 'https://script.google.com/macros/s/AKfycbzh2id2zYOwZecGMIiZG3-n0Juqa0KKQRjchXurVbjDnTEKKgejGHDe5LMiJKq-Zk4v/exec';
+const WRITE_TOKEN = 'marc2025SagaKendo';
+const LS_NAME     = 'marc_user_name';
+
+const LS = {
+  get: function(key) { try { return localStorage.getItem(key); } catch(e) { return null; } },
+  set: function(key, val) { try { localStorage.setItem(key, val); return true; } catch(e) { showToast('⚠ ローカル保存に失敗しました'); return false; } },
+  remove: function(key) { try { localStorage.removeItem(key); } catch(e) {} }
+};
+
+function todayJST() {
+  return new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' });
 }
 
-function doPost(e) {
-  // ★競合防止：同時書き込み（複数部員の同時送信・チーム保存の同時操作）による
-  //   重複行・上書き事故を防ぐため、書き込み系処理全体をロックで直列化する。
-  const lock = LockService.getScriptLock();
-  try {
-    lock.waitLock(10000); // 最大10秒待機。取得できなければエラーを返す。
-  } catch (lockErr) {
-    return makeCorsResponse({ status: 'error', message: 'サーバーが混み合っています。数秒後にもう一度お試しください。' });
-  }
-  try {
-    const data = JSON.parse(e.postData.contents);
-    if (WRITE_TOKEN && data['_token'] !== WRITE_TOKEN) {
-      return makeCorsResponse({ status: 'error', message: 'Unauthorized' });
-    }
-    delete data['_token'];
-    if (data.action === 'saveAgenda') return handleSaveAgenda(data);
-    if (data.action === 'saveTeams')  return handleSaveTeams(data);
-    if (data.action === 'addEvent')   return handleAddEvent(data);
-    if (data.action === 'deleteEvent') return handleDeleteEvent(data);
-    if (data['氏名']) data['氏名'] = normalizeName(data['氏名']);
-    writeToSheet(data);
-    if (NOTIFY_EMAIL) sendNotification(data);
-    return makeCorsResponse({ status: 'ok' });
-  } catch (err) {
-    return makeCorsResponse({ status: 'error', message: err.message });
-  } finally {
-    lock.releaseLock();
-  }
-}
+const marc = { name: '', grade: '', kumi: '', declares: {}, logs: {}, history: [], loaded: false, _fetchId: 0 };
 
-function writeToSheet(data) {
-  const ss      = SpreadsheetApp.openById(SHEET_ID);
-  const userKey = makeUserKey(data);
-  const type    = data['記録種別'] || 'その他';
+const barsGroups = [
+  { group:'打突の質', color:'#c0392b', icon:'⚔', items:[
+    { key:'kire', label:'打突の冴え', hint:'気・剣・体が一致した打突ができているかを評価します。声・踏み込み・竹刀が同時に出ているか、「パン！」という冴えた音が出ているかが目安です。', anchors:['打突が弱く、音が鳴らない。手だけで打っている状態。','踏み込みはあるが、手と足がバラバラになることが多い。','気剣体がほぼ一致している。冴えた音が時々出る。','安定して気剣体が一致し、冴えた打突が出せる。声も充実している。','どの場面でも冴えた一本が出せる。試合でも稽古でも質が変わらない。'] },
+    { key:'tenouchi', label:'手の内', hint:'打突の瞬間に手首のスナップ（絞り）が使えているかを評価します。竹刀の刃筋が正しく、相手の打突部位に刃部でしっかり当たっているかが目安です。', anchors:['竹刀を握りしめている。打突後も力が抜けない。刃筋が乱れる。','時々スナップが使えるが、一定していない。刃筋が乱れることが多い。','おおむね刃筋が正しく、手首のスナップが使えている。','冴えのある打突が安定して出せる。手の内が自然にできている。','どんな角度・距離からでも刃筋正しく冴えた打突が打てる。'] },
+    { key:'zanshin', label:'残心', hint:'打突した後も油断せず、相手の反撃に対応できる身構えと気構えを保てているかを評価します。', anchors:['打った後、すぐに構えが崩れる。次の動作への準備が遅い。','残心を意識しているが、体勢が崩れることが多い。','打突後に構えを取れる。間合いを切る動作がある程度できている。','打突後の残心が安定している。相手の反撃に対応できる体勢を常に取れる。','残心が打突と一体になっている。打った後も相手を制する気構えが出ている。'] }
+  ]},
+  { group:'戦術・判断', color:'#1a3a6b', icon:'🧭', items:[
+    { key:'maai', label:'間合い管理', hint:'一足一刀（相手に一歩踏み込めば打てる距離）の間合いを意識して動けているかを評価します。', anchors:['間合いを意識できていない。常に遠すぎるか近すぎる状態になる。','一足一刀の間合いは理解しているが、試合中に維持できない。','一足一刀の間合いを意識して動けている。相手に合わせた調整ができつつある。','相手の間合いも把握しながら、自分の打てる間合いを作って動ける。','間合いで相手を崩せる。意図的に間合いを支配して主導権を取れる。'] },
+    { key:'seme', label:'攻め', hint:'打つ前に竹刀や体で相手の中心を攻め、相手を動かしてから打てているかを評価します。', anchors:['攻めの意識がない。タイミングを計らず、ただ打ちにいっている状態。','攻めようとしているが、竹刀や体が攻めていない。形だけになっている。','中心を攻めることができる。相手が反応・動くことがある。','攻めで相手を崩してから打つパターンを持っている。','攻めだけで相手を動かせる。打たなくても主導権が取れている。'] },
+    { key:'kikai', label:'機会の見極め', hint:'「いつ打つか」のタイミング判断を評価します。', anchors:['タイミングがわからず、ランダムに打っている。機会を意識できていない。','出ばな・引き技などの種類は知っているが、実践で捉えられない。','相手の動きを見て打てることがある。出ばなを意識して稽古できている。','複数の機会（出ばな・居つき・引き）を状況に応じて使い分けられる。','機会を自分から作り出せる。相手を誘って打つパターンを複数持っている。'] },
+    { key:'footwork', label:'足さばき・体さばき', hint:'送り足・踏み込み足が正しくできているか、打突後に体勢が崩れないかを評価します。', anchors:['送り足が不安定。打突後に体勢が崩れる。足と手がバラバラになる。','基本の送り足はできているが、動きが硬い。踏み込みが弱い。','踏み込み・送り足がおおむねできている。方向転換もある程度スムーズ。','攻防の中で足さばきが安定している。踏み込みの強さと速さがある。','足さばきで相手を崩せる。どんな場面でも体勢が安定している。'] },
+    { key:'shiai', label:'試合運び', hint:'試合全体の流れを読みながら動けているかを評価します。', anchors:['試合中に何をすべきかわからず、ただ打ち合っている。場の流れが読めない。','先取りしたら守る・負けたら焦るなど、場面への対応が単純で固定的。','試合の流れを読んで動けることがある。引き際がわかってきた。','場の使い方・時間の使い方を意識できている。勝ちパターンを持っている。','試合全体を組み立てられる。相手・場面・残り時間に応じて戦い方を変えられる。'] }
+  ]},
+  { group:'心・気', color:'#028090', icon:'🔥', items:[
+    { key:'kisei', label:'気勢（声・気合）', hint:'稽古・試合を通じて充実した声・気合が出ているかを評価します。', anchors:['声が小さい、またはほとんど出ていない。気合が感じられない。','打突時には声が出るが、稽古全体での気合が続かない。','稽古を通じて声が出ている。打突に気合が乗っていることが多い。','常に充実した声が出ている。気合で相手を圧倒できることがある。','気合だけで場の雰囲気を変えられる。声と打突が完全に一体になっている。'] },
+    { key:'mental', label:'精神的強さ', hint:'プレッシャーのかかる場面でも自分の剣道が出せているかを評価します。', anchors:['プレッシャーで頭が真っ白になる。試合になると稽古の力が出ない。','緊張で体が硬くなる。稽古でできていたことが試合でできないことが多い。','ある程度のプレッシャーの中でも、自分の剣道がある程度出せる。','強い相手や重要な場面でも、冷静に判断して動ける。','プレッシャーが高いほど力が出る。大事な場面で自分のベストが出せる。'] }
+  ]}
+];
 
-  if (type === '自己理解') {
-    writeToNamedSheet(ss, userKey + '_自己理解', data);
-    writeToNamedSheet(ss, '全員_自己理解', data);
-  } else if (type === '稽古ログ') {
-    writeToNamedSheet(ss, userKey + '_ログ', data);
-    writeToNamedSheet(ss, '全員_ログ', data);
-  } else if (type === 'チャレンジ宣言') {
-    upsertToNamedSheet(ss, userKey + '_宣言', data);
-    upsertToNamedSheet(ss, '全員_チャレンジ宣言', data);
-  } else {
-    writeToNamedSheet(ss, userKey + '_その他', data);
-  }
-  writeToNamedSheet(ss, 'MARCシート', data);
-}
-
-function writeToNamedSheet(ss, sheetName, data) {
-  const safeName = sheetName.slice(0, 100);
-  let sheet = ss.getSheetByName(safeName);
-  if (!sheet) sheet = ss.insertSheet(safeName);
-  const keys   = Object.keys(data);
-  const values = Object.values(data);
-  function safeVal(v) {
-    if (v instanceof Date) return Utilities.formatDate(v, 'Asia/Tokyo', 'yyyy-MM-dd');
-    return v;
-  }
-  const safeValues = values.map(safeVal);
-  if (sheet.getLastRow() === 0) {
-    sheet.appendRow(keys);
-    sheet.getRange(1, 1, 1, keys.length)
-      .setBackground('#1B3A5C').setFontColor('#FFFFFF').setFontWeight('bold');
-    sheet.setFrozenRows(1);
-    sheet.appendRow(safeValues);
-  } else {
-    const existingHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-    const rowToWrite = existingHeaders.map(function(h) {
-      const idx = keys.indexOf(h);
-      return idx >= 0 ? safeValues[idx] : '';
-    });
-    sheet.appendRow(rowToWrite);
-  }
-}
-
-function sendNotification(data) {
-  const name = data['氏名'] || '（未記入）';
-  const type = data['記録種別'] || 'その他';
-  MailApp.sendEmail({
-    to: NOTIFY_EMAIL,
-    subject: '【MARCプログラム】' + name + ' さんが' + type + 'を提出しました',
-    body: [
-      name + ' さんが' + type + 'を提出しました。',
-      '',
-      '▼ スプレッドシート',
-      'https://docs.google.com/spreadsheets/d/' + SHEET_ID,
-      '',
-      type === '自己理解'
-        ? '課題感：' + (data['今の課題感'] || '未記入')
-        : '印象に残った場面：' + (data['印象に残った場面'] || '未記入'),
-    ].join('\n'),
-  });
-}
-
-function handleGetUserAll(name, grade, kumi, callback, debugFlag) {
-  try {
-    const DEBUG = !!debugFlag;
-    const ss       = SpreadsheetApp.openById(SHEET_ID);
-    const norm     = normalizeName(name);
-    const normGrad = String(grade || '').replace(/\s/g, '');
-    const normKumi = String(kumi  || '').replace(/\s/g, '');
-    const userKey  = norm + (normGrad ? '_' + normGrad + (normKumi ? '_' + normKumi : '') : '');
-    const result   = { status: 'ok', data: {}, declares: [], logs: [] };
-
-    const profSheetNames = [userKey + '_自己理解', norm + '_自己理解'];
-    let profFound = false;
-    for (const sn of profSheetNames) {
-      const profSheet = ss.getSheetByName(sn);
-      if (profSheet && profSheet.getLastRow() >= 2) {
-        const ph = profSheet.getRange(1, 1, 1, profSheet.getLastColumn()).getValues()[0];
-        const pv = profSheet.getRange(profSheet.getLastRow(), 1, 1, profSheet.getLastColumn()).getDisplayValues()[0];
-        ph.forEach(function(h, i) { result.data[h] = pv[i]; });
-        profFound = true;
-        break;
-      }
-    }
-    if (!profFound) {
-      const allSheet = ss.getSheetByName('全員_自己理解');
-      if (allSheet && allSheet.getLastRow() >= 2) {
-        const ah    = allSheet.getRange(1, 1, 1, allSheet.getLastColumn()).getValues()[0];
-        const arows = allSheet.getRange(2, 1, allSheet.getLastRow() - 1, allSheet.getLastColumn()).getDisplayValues();
-        const nameIdx = ah.indexOf('氏名'), gradeIdx = ah.indexOf('学年'), kumiIdx = ah.indexOf('組');
-        let lastRow = null;
-        for (let i = arows.length - 1; i >= 0; i--) {
-          const rowName  = normalizeName(arows[i][nameIdx]);
-          const rowGrade = gradeIdx >= 0 ? String(arows[i][gradeIdx]).replace(/\s/g,'') : '';
-          const rowKumi  = kumiIdx  >= 0 ? String(arows[i][kumiIdx]).replace(/\s/g,'')  : '';
-          if (rowName === norm && (!normGrad||rowGrade===normGrad) && (!normKumi||rowKumi===normKumi)) { lastRow = arows[i]; break; }
-        }
-        if (lastRow) ah.forEach(function(h, i) { result.data[h] = lastRow[i]; });
-      }
-    }
-
-    const declSheetNames = [userKey + '_宣言', norm + '_宣言'];
-    let declFound = false;
-    for (const sn of declSheetNames) {
-      const declSheet = ss.getSheetByName(sn);
-      if (declSheet && declSheet.getLastRow() >= 2) {
-        const dh    = declSheet.getRange(1, 1, 1, declSheet.getLastColumn()).getValues()[0];
-        const drows = declSheet.getRange(2, 1, declSheet.getLastRow() - 1, declSheet.getLastColumn()).getDisplayValues();
-        result.declares = drows.map(function(row) { const obj={}; dh.forEach(function(h,i){obj[h]=row[i];}); return obj; });
-        declFound = true;
-        break;
-      }
-    }
-    if (!declFound) {
-      // ★個人シートが（学年・組未確定などの理由で）見つからない場合、
-      //   自己理解と同様に「全員_チャレンジ宣言」を氏名（＋学年・組があれば）で
-      //   絞り込んでフォールバック検索する。以前はこのフォールバックが
-      //   declares/logsだけ存在せず、ページ再読み込み直後（学年・組がまだ
-      //   JS変数に反映されていない瞬間）に宣言が「ない」と誤判定され、
-      //   入力済みのチャレンジ宣言が見えなくなるバグの原因になっていた。
-      const allDeclSheet = ss.getSheetByName('全員_チャレンジ宣言');
-      if (DEBUG) result._debug = Object.assign(result._debug||{}, {
-        declSheetNamesTried: declSheetNames,
-        allDeclSheetFound: !!allDeclSheet,
-        allDeclSheetLastRow: allDeclSheet ? allDeclSheet.getLastRow() : null
+const barsContainer = document.getElementById('barsEvalContainer');
+barsGroups.forEach(group => {
+  const gDiv = document.createElement('div');
+  gDiv.className = 'bars-group';
+  gDiv.innerHTML = `<div class="bars-group-header"><span class="bars-group-icon">${group.icon}</span><span class="bars-group-label" style="color:${group.color}">${group.group}</span></div>`;
+  group.items.forEach(item => {
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'bars-item';
+    itemDiv.dataset.key = item.key;
+    const anchorRows = item.anchors.map((text, i) => {
+      const level = i + 1;
+      const miniStars = [1,2,3,4,5].map(n => `<span class="mini-star${n <= level ? ' lit' : ''}">★</span>`).join('');
+      return `<div class="bars-anchor-row" data-level="${level}"><div class="bars-anchor-num">${miniStars}</div><div class="bars-anchor-text">${text}</div></div>`;
+    }).join('');
+    itemDiv.innerHTML = `
+      <div class="bars-item-top">
+        <div class="bars-item-info"><div class="bars-item-name">${item.label}</div><div class="bars-item-hint">${item.hint}</div></div>
+        <div class="bars-stars" data-key="${item.key}">${[1,2,3,4,5].map(n => `<span class="bars-star" data-v="${n}">★</span>`).join('')}</div>
+      </div>
+      <div class="bars-anchor-panel">${anchorRows}</div>
+      <div class="bars-selected-label" id="bars-label-${item.key}">← 上の行動説明を読んで、当てはまる★を選んでください</div>`;
+    const starsWrap = itemDiv.querySelector('.bars-stars');
+    starsWrap.querySelectorAll('.bars-star').forEach(star => {
+      star.addEventListener('click', () => {
+        const val = +star.dataset.v;
+        const currentLit = starsWrap.querySelectorAll('.bars-star.lit').length;
+        const newVal = currentLit === val ? 0 : val;
+        starsWrap.querySelectorAll('.bars-star').forEach((s, i) => s.classList.toggle('lit', i < newVal));
+        itemDiv.querySelectorAll('.bars-anchor-row').forEach(row => row.classList.toggle('selected', +row.dataset.level === newVal));
+        const labelEl = document.getElementById('bars-label-' + item.key);
+        const levelLabels = ['まだこれから', '基礎段階', '標準レベル', '得意分野', '武器・強み'];
+        labelEl.innerHTML = newVal === 0
+          ? '← 上の行動説明を読んで、当てはまる★を選んでください'
+          : `現在の評価：<span>★${newVal} — ${levelLabels[newVal-1]}</span>`;
+        updateProgress();
       });
-      if (allDeclSheet && allDeclSheet.getLastRow() >= 2) {
-        const adh    = allDeclSheet.getRange(1, 1, 1, allDeclSheet.getLastColumn()).getValues()[0];
-        const adrows = allDeclSheet.getRange(2, 1, allDeclSheet.getLastRow() - 1, allDeclSheet.getLastColumn()).getDisplayValues();
-        const nameIdx = adh.indexOf('氏名'), gradeIdx = adh.indexOf('学年'), kumiIdx = adh.indexOf('組');
-        if (DEBUG) result._debug = Object.assign(result._debug||{}, {
-          headers: adh, nameIdx: nameIdx, gradeIdx: gradeIdx, kumiIdx: kumiIdx,
-          normForCompare: norm, normGradForCompare: normGrad, normKumiForCompare: normKumi,
-          sampleRow: adrows[0] || null,
-          sampleRowNameNormalized: adrows[0] ? normalizeName(adrows[0][nameIdx]) : null
-        });
-        result.declares = adrows.filter(function(row) {
-          const rowName  = normalizeName(row[nameIdx]);
-          const rowGrade = gradeIdx >= 0 ? String(row[gradeIdx]).replace(/\s/g,'') : '';
-          const rowKumi  = kumiIdx  >= 0 ? String(row[kumiIdx]).replace(/\s/g,'')  : '';
-          return rowName === norm && (!normGrad||rowGrade===normGrad) && (!normKumi||rowKumi===normKumi);
-        }).map(function(row) { const obj={}; adh.forEach(function(h,i){obj[h]=row[i];}); return obj; });
-      }
-    }
-
-    const logSheetNames = [userKey + '_ログ', norm + '_ログ'];
-    let logFound = false;
-    for (const sn of logSheetNames) {
-      const logSheet = ss.getSheetByName(sn);
-      if (logSheet && logSheet.getLastRow() >= 2) {
-        const lh    = logSheet.getRange(1, 1, 1, logSheet.getLastColumn()).getValues()[0];
-        const lrows = logSheet.getRange(2, 1, logSheet.getLastRow() - 1, logSheet.getLastColumn()).getDisplayValues();
-        result.logs = lrows.map(function(row) { const obj={}; lh.forEach(function(h,i){obj[h]=row[i];}); return obj; });
-        logFound = true;
-        break;
-      }
-    }
-    if (!logFound) {
-      // ★宣言と同じ理由で、ログ側にもフォールバックを追加。
-      const allLogSheet = ss.getSheetByName('全員_ログ');
-      if (allLogSheet && allLogSheet.getLastRow() >= 2) {
-        const lah    = allLogSheet.getRange(1, 1, 1, allLogSheet.getLastColumn()).getValues()[0];
-        const larows = allLogSheet.getRange(2, 1, allLogSheet.getLastRow() - 1, allLogSheet.getLastColumn()).getDisplayValues();
-        const nameIdx = lah.indexOf('氏名'), gradeIdx = lah.indexOf('学年'), kumiIdx = lah.indexOf('組');
-        result.logs = larows.filter(function(row) {
-          const rowName  = normalizeName(row[nameIdx]);
-          const rowGrade = gradeIdx >= 0 ? String(row[gradeIdx]).replace(/\s/g,'') : '';
-          const rowKumi  = kumiIdx  >= 0 ? String(row[kumiIdx]).replace(/\s/g,'')  : '';
-          return rowName === norm && (!normGrad||rowGrade===normGrad) && (!normKumi||rowKumi===normKumi);
-        }).map(function(row) { const obj={}; lah.forEach(function(h,i){obj[h]=row[i];}); return obj; });
-      }
-    }
-
-    return callback ? jsonpResponse(result, callback) : jsonResponse(result);
-  } catch (err) {
-    const e2 = { status: 'error', message: err.message };
-    return callback ? jsonpResponse(e2, callback) : jsonResponse(e2);
-  }
-}
-
-function handleGetAll(params, callback) {
-  try {
-    const ss   = SpreadsheetApp.openById(SHEET_ID);
-    const type = params.type || '';
-    const date = params.date || '';
-    let sheetName;
-    if      (type === 'チャレンジ宣言') sheetName = '全員_チャレンジ宣言';
-    else if (type === '自己理解')       sheetName = '全員_自己理解';
-    else if (type === '稽古ログ')       sheetName = '全員_ログ';
-    else                                sheetName = 'MARCシート';
-
-    const sheet = ss.getSheetByName(sheetName);
-    if (!sheet || sheet.getLastRow() < 2) {
-      const empty = { status: 'ok', rows: [], total: 0 };
-      return callback ? jsonpResponse(empty, callback) : jsonResponse(empty);
-    }
-
-    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-    const rows    = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).getDisplayValues();
-
-    let data = rows.map(function(row) {
-      const obj = {};
-      headers.forEach(function(h, i) { obj[h] = row[i]; });
-      return obj;
-    }).filter(function(obj) {
-      if (!date) return true;
-      const d = String(obj['稽古日'] || obj['date'] || '');
-      return d.indexOf(date) >= 0;
-    });
-
-    data = data.map(function(obj) {
-      ['稽古日','date','記入日'].forEach(function(key) {
-        if (!obj[key]) return;
-        const v = obj[key];
-        if (typeof v === 'string' && v.indexOf('/') > 0) obj[key] = v.slice(0,10).replace(/\//g,'-');
+      star.addEventListener('mouseenter', () => {
+        const val = +star.dataset.v;
+        itemDiv.querySelectorAll('.bars-anchor-row').forEach(row => row.style.opacity = +row.dataset.level === val ? '1' : '0.5');
       });
-      if (obj['氏名']) obj['氏名'] = normalizeName(obj['氏名']);
-      if (obj['name']) obj['name'] = normalizeName(obj['name']);
-      return obj;
+      star.addEventListener('mouseleave', () => {
+        itemDiv.querySelectorAll('.bars-anchor-row').forEach(row => row.style.opacity = '1');
+      });
     });
-
-    data.sort(function(a, b) {
-      return String(b['timestamp'] || '').localeCompare(String(a['timestamp'] || ''));
-    });
-
-    const result = { status: 'ok', rows: data, total: data.length };
-    return callback ? jsonpResponse(result, callback) : jsonResponse(result);
-  } catch (err) {
-    const errObj = { status: 'error', message: err.message };
-    return callback ? jsonpResponse(errObj, callback) : jsonResponse(errObj);
-  }
-}
-
-function jsonResponse(obj) {
-  return ContentService
-    .createTextOutput(JSON.stringify(obj))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-function jsonpResponse(obj, callback) {
-  return ContentService
-    .createTextOutput((callback || 'callback') + '(' + JSON.stringify(obj) + ')')
-    .setMimeType(ContentService.MimeType.JAVASCRIPT);
-}
-
-function upsertToNamedSheet(ss, sheetName, data) {
-  const sheet = ss.getSheetByName(sheetName);
-  if (!sheet || sheet.getLastRow() < 2) { writeToNamedSheet(ss, sheetName, data); return; }
-  const keys    = Object.keys(data);
-  const values  = keys.map(function(k) {
-    return data[k] instanceof Date ? Utilities.formatDate(data[k], 'Asia/Tokyo', 'yyyy-MM-dd') : data[k];
+    gDiv.appendChild(itemDiv);
   });
-  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-  const nameIdx = headers.indexOf('氏名'), dateIdx = headers.indexOf('稽古日');
-  if (nameIdx >= 0 && dateIdx >= 0) {
-    const dataName = normalizeName(String(data['氏名'] || ''));
-    const dataDate = String(data['稽古日'] || '').slice(0, 10);
-    const rows     = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).getValues();
-    for (let i = 0; i < rows.length; i++) {
-      const rowName = normalizeName(String(rows[i][nameIdx] || ''));
-      const rowDate = String(rows[i][dateIdx] || '').slice(0, 10);
-      if (rowName === dataName && rowDate === dataDate) {
-        const rowToWrite = headers.map(function(h) { const idx=keys.indexOf(h); return idx>=0?values[idx]:rows[i][headers.indexOf(h)]; });
-        sheet.getRange(i + 2, 1, 1, headers.length).setValues([rowToWrite]);
-        return;
-      }
-    }
-  }
-  writeToNamedSheet(ss, sheetName, data);
+  barsContainer.appendChild(gDiv);
+});
+
+function getBarsValues() {
+  const result = {};
+  barsGroups.forEach(group => {
+    group.items.forEach(item => {
+      const stars = document.querySelectorAll(`.bars-stars[data-key="${item.key}"] .bars-star.lit`);
+      result['自己評価_' + item.key] = stars.length;
+    });
+  });
+  return result;
 }
 
-// ============================================================
-//  追加機能：getNews / saveAgenda / saveTeams
-//  カレンダーID（立ち上げGASと共有）
-// ============================================================
-const CALENDAR_ID = '4b6e31801f7793e4f7384f523e9f0453747e6c45c42e6f1278f39eddb062a77f@group.calendar.google.com';
-
-function handleGetNews(callback) {
-  return _handleGetNewsImpl(null, null, callback);
+function setBarsValue(key, val) {
+  const starsWrap = document.querySelector(`.bars-stars[data-key="${key}"]`);
+  if (!starsWrap || !val) return;
+  const n = parseInt(val) || 0;
+  starsWrap.querySelectorAll('.bars-star').forEach((s, i) => s.classList.toggle('lit', i < n));
+  const itemDiv = starsWrap.closest('.bars-item');
+  if (itemDiv) itemDiv.querySelectorAll('.bars-anchor-row').forEach(row => row.classList.toggle('selected', +row.dataset.level === n));
 }
 
-function handleGetNewsMonth(params, callback) {
-  var year  = parseInt(params.year  || new Date().getFullYear());
-  var month = parseInt(params.month || (new Date().getMonth() + 1));
-  return _handleGetNewsImpl(year, month, callback);
+function toggleWaza(btn) {
+  const active = document.querySelectorAll('#wazaSelector .rank-btn.active');
+  if (btn.classList.contains('active')) { btn.classList.remove('active'); }
+  else if (active.length < 3) { btn.classList.add('active'); }
+  else { showToast('得意技は最大3つまでです'); }
 }
 
-function _handleGetNewsImpl(year, month, callback) {
-  try {
-    const ss = SpreadsheetApp.openById(SHEET_ID);
-    const result = { status: 'ok', calendar: [], agenda: null, teams: [] };
-    const now = new Date();
+function toggleSection(header) {
+  const body = header.nextElementSibling;
+  const toggle = header.querySelector('.section-toggle');
+  body.classList.toggle('collapsed');
+  toggle.classList.toggle('open');
+}
 
-    // カレンダー予定（月指定あり→その月全体、なし→今後30日）
-    try {
-      const cal = CalendarApp.getCalendarById(CALENDAR_ID);
-      if (cal) {
-        let searchStart, searchEnd;
-        if (year && month) {
-          searchStart = new Date(year, month - 1, 1);
-          searchEnd   = new Date(year, month, 0, 23, 59, 59);
-        } else {
-          searchStart = now;
-          searchEnd   = new Date(); searchEnd.setDate(searchEnd.getDate() + 30);
-        }
-        const events = cal.getEvents(searchStart, searchEnd);
-        const todayStr = Utilities.formatDate(now, 'Asia/Tokyo', 'M/d');
-        result.calendar = events.map(function(ev) {
-          const start = ev.getStartTime();
-          const dateStr = Utilities.formatDate(start, 'Asia/Tokyo', 'M/d');
-          const dateKey = Utilities.formatDate(start, 'Asia/Tokyo', 'yyyy-MM-dd');
-          const timeStr = ev.isAllDayEvent() ? '' : Utilities.formatDate(start, 'Asia/Tokyo', 'HH:mm');
-          return {
-            id: ev.getId(),
-            date: dateStr,
-            dateKey: dateKey,
-            time: timeStr,
-            timeEnd: ev.isAllDayEvent() ? '' : Utilities.formatDate(ev.getEndTime(), 'Asia/Tokyo', 'HH:mm'),
-            title: ev.getTitle(),
-            today: dateStr === todayStr
-          };
-        });
-      }
-    } catch(e) { console.warn('カレンダー取得失敗:', e); }
+function updateProgress() {
+  const required = document.querySelectorAll('[data-required]');
+  let filled = 0;
+  required.forEach(el => { if (el.value.trim()) filled++; });
+  const pct = Math.round((filled / required.length) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = '記入率 ' + pct + '%';
+}
 
-    // 議題（「議題」シート）
-    try {
-      const agendaSheet = ss.getSheetByName('議題');
-      if (agendaSheet && agendaSheet.getLastRow() >= 2) {
-        const headers = agendaSheet.getRange(1, 1, 1, agendaSheet.getLastColumn()).getValues()[0];
-        const lastRow = agendaSheet.getRange(agendaSheet.getLastRow(), 1, 1, agendaSheet.getLastColumn()).getDisplayValues()[0];
-        const obj = {};
-        headers.forEach(function(h, i) { obj[h] = lastRow[i]; });
-        result.agenda = { text: obj['議題'] || '', date: obj['日付'] || '', start: obj['開始時刻'] || '', end: obj['終了時刻'] || '' };
-      }
-    } catch(e) { console.warn('議題取得失敗:', e); }
+let _toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
 
-    // チーム編成
-    try {
-      const teamSheet = ss.getSheetByName('チーム編成');
-      if (teamSheet && teamSheet.getLastRow() >= 2) {
-        const headers = teamSheet.getRange(1, 1, 1, teamSheet.getLastColumn()).getValues()[0];
-        const rows = teamSheet.getRange(2, 1, teamSheet.getLastRow() - 1, teamSheet.getLastColumn()).getDisplayValues();
-        const teamMap = {};
-        rows.forEach(function(row) {
-          const obj = {};
-          headers.forEach(function(h, i) { obj[h] = row[i]; });
-          const tname = obj['チーム名'] || '';
-          if (!tname) return;
-          if (!teamMap[tname]) teamMap[tname] = { name: tname, leader: '', sub: '', members: [], theme: obj['稽古テーマ'] || '', criteria: obj['選出基準'] || '' };
-          const member = obj['メンバー'] || '';
-          const role = obj['役割'] || '';
-          if (member) {
-            teamMap[tname].members.push(member);
-            if (role === 'リーダー') teamMap[tname].leader = member;
-            else if (role === 'サブリーダー') teamMap[tname].sub = member;
+function sendToGAS(data, callback) {
+  const payload = Object.assign({}, data, { _token: WRITE_TOKEN });
+  fetch(GAS_URL, {
+    method: 'POST', mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(payload),
+  })
+  .then(function() {
+    const type = data['記録種別'] || '';
+    const name = data['氏名'] || marc.name || '';
+    if (!name) { callback(true); return; }
+    setTimeout(function() {
+      const params = new URLSearchParams({ name: name });
+      if (marc.grade) params.set('grade', marc.grade);
+      if (marc.kumi)  params.set('kumi',  marc.kumi);
+      fetch(GAS_URL + '?' + params.toString(), { method: 'GET' })
+      .then(function(res) { return res.text(); })
+      .then(function(text) {
+        try {
+          const json = JSON.parse(text);
+          if (json.status !== 'ok') { callback(false); return; }
+          if (type === 'チャレンジ宣言') {
+            const date = String(data['稽古日'] || '').slice(0,10);
+            const found = (json.declares || []).some(function(r) {
+              return String(r['稽古日']||r.date||'').replace(/\//g,'-').slice(0,10) === date;
+            });
+            callback(found);
+          } else if (type === '稽古ログ') {
+            const date = String(data['稽古日']||data['date']||'').slice(0,10);
+            const found = (json.logs || []).some(function(r) {
+              return String(r.date||r['稽古日']||'').replace(/\//g,'-').slice(0,10) === date;
+            });
+            callback(found);
+          } else {
+            callback(!!(json.data && json.data['氏名']));
           }
-        });
-        result.teams = Object.values(teamMap);
-      }
-    } catch(e) { console.warn('チーム取得失敗:', e); }
+        } catch(e) { callback(true); }
+      })
+      .catch(function() { callback(true); });
+    }, 2000);
+  })
+  .catch(function(err) { console.error('GAS送信エラー:', err); callback(false); });
+}
 
-    // 全員の最新チャレンジ宣言
+function fetchUserData(name, grade, kumi, fetchId) {
+  const params = new URLSearchParams({ name: name });
+  if (grade) params.set('grade', grade);
+  if (kumi)  params.set('kumi', kumi);
+  showToast('⏳ データを読み込み中…');
+  var timedOut = false;
+  var timer = setTimeout(function() { timedOut = true; showToast('⚠ データ読み込みがタイムアウトしました。再度お試しください'); }, 20000);
+  fetch(GAS_URL + '?' + params.toString(), { method: 'GET' })
+  .then(res => res.text())
+  .then(text => {
+    clearTimeout(timer);
+    if (timedOut) return;
+    if (fetchId !== marc._fetchId) return;
     try {
-      const declSheet = ss.getSheetByName('全員_チャレンジ宣言');
-      if (declSheet && declSheet.getLastRow() >= 2) {
-        const dh = declSheet.getRange(1, 1, 1, declSheet.getLastColumn()).getValues()[0];
-        const drows = declSheet.getRange(2, 1, declSheet.getLastRow() - 1, declSheet.getLastColumn()).getDisplayValues();
-        const nameIdx = dh.indexOf('氏名');
-        const intentIdx = dh.indexOf('intent') >= 0 ? dh.indexOf('intent') : dh.indexOf('試したいこと');
-        const dateIdx = dh.indexOf('稽古日');
-        const declMap = {};
-        drows.forEach(function(row) {
-          const name = normalizeName(row[nameIdx] || '');
-          const intent = row[intentIdx] || '';
-          const date = row[dateIdx] || '';
-          if (!name) return;
-          if (!declMap[name] || date > declMap[name].date) declMap[name] = { intent: intent, date: date };
-        });
-        result.declares = declMap;
-      }
-    } catch(e) { console.warn('宣言取得失敗:', e); }
-
-    return callback ? jsonpResponse(result, callback) : jsonResponse(result);
-  } catch(err) {
-    const e2 = { status: 'error', message: err.message };
-    return callback ? jsonpResponse(e2, callback) : jsonResponse(e2);
-  }
-}
-
-// ★marc-sheetの「お知らせ」タブ「予定を追加」用。以前はフロント側がGoogleカレンダーの
-//   「予定追加」URLを新規タブで開き、ユーザーの手動保存に依存していたため、
-//   保存を完了しなかったり権限がないと登録されない不安定な仕組みだった。
-//   議題保存（handleSaveAgenda）と同様、ここで直接CalendarAppに登録する。
-function handleDeleteEvent(data, callback) {
-  try {
-    const eventId = data.eventId || '';
-    if (!eventId) { const r={status:'error',message:'eventId required'}; return callback?jsonpResponse(r,callback):jsonResponse(r); }
-    const cal = CalendarApp.getCalendarById(CALENDAR_ID);
-    if (!cal)  { const r={status:'error',message:'カレンダーが見つかりません'}; return callback?jsonpResponse(r,callback):jsonResponse(r); }
-    const ev = cal.getEventById(eventId);
-    if (!ev)   { const r={status:'error',message:'イベントが見つかりません（すでに削除済みの可能性があります）'}; return callback?jsonpResponse(r,callback):jsonResponse(r); }
-    ev.deleteEvent();
-    const r={status:'ok'}; return callback?jsonpResponse(r,callback):jsonResponse(r);
-  } catch(err) {
-    const r={status:'error',message:err.message}; return callback?jsonpResponse(r,callback):jsonResponse(r);
-  }
-}
-
-function handleAddEvent(data, callback) {
-  try {
-    const title = (data.title || '').trim();
-    const date  = data.date || '';
-    if (!title || !date) { const r={status:'error',message:'タイトルと日付が必要です'}; return callback?jsonpResponse(r,callback):jsonResponse(r); }
-    const cal = CalendarApp.getCalendarById(CALENDAR_ID);
-    if (!cal) { const r={status:'error',message:'カレンダーが見つかりません'}; return callback?jsonpResponse(r,callback):jsonResponse(r); }
-    const time    = data.time    || '';
-    const timeEnd = data.timeEnd || '';
-    const parts = date.split('-').map(Number);
-    const y = parts[0], m = parts[1], d = parts[2];
-    const tParts    = time    ? time.split(':').map(Number)    : [9, 0];
-    const tEndParts = timeEnd ? timeEnd.split(':').map(Number) : [tParts[0] + 1, tParts[1]];
-    const start = new Date(y, m - 1, d, tParts[0],    tParts[1]);
-    const end   = new Date(y, m - 1, d, tEndParts[0], tEndParts[1]);
-    cal.createEvent(title, start, end, { description: 'MARCプログラム 導入・運用ナビより登録' });
-    const r={status:'ok'}; return callback?jsonpResponse(r,callback):jsonResponse(r);
-  } catch (err) {
-    const r={status:'error',message:err.message}; return callback?jsonpResponse(r,callback):jsonResponse(r);
-  }
-}
-
-function handleSaveAgenda(data) {
-  try {
-    const ss = SpreadsheetApp.openById(SHEET_ID);
-    let sheet = ss.getSheetByName('議題');
-    if (!sheet) {
-      sheet = ss.insertSheet('議題');
-      sheet.appendRow(['日付', '開始時刻', '終了時刻', '議題', '更新日時']);
-      sheet.getRange(1, 1, 1, 5).setBackground('#1B3A5C').setFontColor('#FFFFFF').setFontWeight('bold');
-      sheet.setFrozenRows(1);
-    }
-    const now = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy/MM/dd HH:mm');
-    sheet.appendRow([data.date || '', data.start || '', data.end || '', data.text || '', now]);
-
-    // Googleカレンダーにも登録
-    try {
-      const cal = CalendarApp.getCalendarById(CALENDAR_ID);
-      if (cal && data.date && data.text) {
-        const d = data.date.replace(/-/g, '');
-        const startH = data.start ? data.start.split(':')[0] : '17';
-        const startM = data.start ? data.start.split(':')[1] : '00';
-        const endH   = data.end   ? data.end.split(':')[0]   : '18';
-        const endM   = data.end   ? data.end.split(':')[1]   : '00';
-        const yr = d.slice(0,4), mo = parseInt(d.slice(4,6))-1, dy = d.slice(6,8);
-        const start = new Date(yr, mo, dy, parseInt(startH), parseInt(startM));
-        const end   = new Date(yr, mo, dy, parseInt(endH),   parseInt(endM));
-        // 同名予定の重複削除
-        const evTitle = 'ミーティング：' + data.text;
-        const search = new Date(); search.setMonth(search.getMonth()-1);
-        const searchEnd = new Date(); searchEnd.setMonth(searchEnd.getMonth()+3);
-        cal.getEvents(search, searchEnd).forEach(function(ev) {
-          if (ev.getTitle() === evTitle) ev.deleteEvent();
-        });
-        cal.createEvent(evTitle, start, end, { description: 'MARCプログラム ダッシュボードより登録' });
-      }
-    } catch(e) { console.warn('カレンダー登録失敗:', e); }
-
-    return jsonResponse({ status: 'ok' });
-  } catch(err) {
-    return jsonResponse({ status: 'error', message: err.message });
-  }
-}
-
-function handleSaveTeams(data) {
-  try {
-    const ss = SpreadsheetApp.openById(SHEET_ID);
-    let sheet = ss.getSheetByName('チーム編成');
-    if (!sheet) {
-      sheet = ss.insertSheet('チーム編成');
-    }
-    // シートを全クリアして書き直す
-    sheet.clearContents();
-    sheet.appendRow(['チーム名', 'メンバー', '役割', '稽古テーマ', '選出基準', '更新日時']);
-    sheet.getRange(1, 1, 1, 5).setBackground('#1B3A5C').setFontColor('#FFFFFF').setFontWeight('bold');
-    sheet.setFrozenRows(1);
-
-    const now = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy/MM/dd HH:mm');
-    const teams = data.teams || [];
-    teams.forEach(function(t) {
-      const members = t.members || [];
-      if (!members.length) {
-        sheet.appendRow([t.name || '', '', '', t.theme || '', t.criteria || '', now]);
-        return;
-      }
-      members.forEach(function(m, idx) {
-        let role = '';
-        if (idx === 0) role = 'リーダー';
-        else if (idx === 1) role = 'サブリーダー';
-        sheet.appendRow([t.name || '', m, role, idx === 0 ? (t.theme || '') : '', idx === 0 ? (t.criteria || '') : '', idx === 0 ? now : '']);
+      const json = JSON.parse(text);
+      if (json.status !== 'ok') return;
+      const hasData = json.data && Object.keys(json.data).length > 0 && json.data['氏名'];
+      if (hasData) applyPrevData(json.data);
+      marc.declares = {};
+      (json.declares || []).forEach(function(r) {
+        const d = String(r['稽古日']||r.date||'').replace(/\//g,'-').slice(0,10);
+        if (d) marc.declares[d] = { intent: r['試したいこと']||r.intent||'' };
       });
+      marc.logs = {};
+      (json.logs || []).forEach(function(r) {
+        const d = String(r.date||r['稽古日']||'').replace(/\//g,'-').slice(0,10);
+        if (d) marc.logs[d] = {
+          intent: r.intent||r['試したいこと']||'',
+          scene: r.scene||r['印象に残った場面']||'',
+          why: r.why||r['なぜそうなったか']||'',
+          next: r.next||r['次への一手']||'',
+          fulfillment: parseInt(String(r.fulfillment||'').replace('/5',''))||0
+        };
+      });
+      marc.history = Object.keys(marc.logs).sort().reverse().map(function(d) {
+        return Object.assign({ date: d }, marc.logs[d]);
+      });
+      marc.loaded = true;
+      renderLogUI();
+      if (hasData) showToast('📋 ' + name + ' さんのデータを復元しました');
+      else showToast('データがまだありません。新規登録になります');
+    } catch(e) { console.error('JSON解析エラー:', e, text.slice(0,200)); }
+  })
+  .catch(err => { clearTimeout(timer); console.error('GAS取得エラー:', err); });
+}
+
+function applyPrevData(data) {
+  const set = function(id, val) { const el = document.getElementById(id); if (el && val !== undefined && val !== '') el.value = val; };
+  set('gakuNenSelect', data['学年']); set('kumiInput', data['組']); set('dankyuSelect', data['段位級']);
+  set('kendoReki', data['剣道歴']); set('kikiteSelect', data['利き手構え']);
+  set('kadaikan', data['今の課題感']); set('kojinMokuhyo', data['個人目標']);
+  if (data['得意技']) {
+    const wazas = String(data['得意技']).split(/[・,、]+/);
+    document.querySelectorAll('#wazaSelector .rank-btn').forEach(function(btn) {
+      if (wazas.some(function(w) { return btn.textContent.trim().includes(w.trim()); })) btn.classList.add('active');
     });
-    return jsonResponse({ status: 'ok' });
-  } catch(err) {
-    return jsonResponse({ status: 'error', message: err.message });
+  }
+  ['kire','tenouchi','zanshin','maai','seme','kikai','footwork','shiai','kisei','mental'].forEach(function(key) {
+    const v = parseInt(data['自己評価_'+key]) || 0;
+    if (v) setBarsValue(key, v);
+  });
+  setTimeout(updateProgress, 200);
+}
+
+function clearProfileForm() {
+  ['gakuNenSelect','kumiInput','dankyuSelect','kendoReki','kikiteSelect','kadaikan','kojinMokuhyo']
+    .forEach(function(id) { const el = document.getElementById(id); if(el) el.value = ''; });
+  document.querySelectorAll('#wazaSelector .rank-btn.active').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.bars-star.lit').forEach(s => s.classList.remove('lit'));
+  document.querySelectorAll('.bars-anchor-row.selected').forEach(r => r.classList.remove('selected'));
+  document.querySelectorAll('[id^="bars-label-"]').forEach(el => { el.innerHTML = '← 上の行動説明を読んで、当てはまる★を選んでください'; });
+  updateProgress();
+}
+
+function collectFormData() {
+  const barsVals = getBarsValues();
+  const wazas = Array.from(document.querySelectorAll('#wazaSelector .rank-btn.active')).map(b => b.textContent.trim()).join('・');
+  return Object.assign({
+    氏名: (document.getElementById('nameInput')?.value||'').trim(),
+    学年: document.getElementById('gakuNenSelect')?.value||'',
+    組: document.getElementById('kumiInput')?.value||'',
+    段位級: document.getElementById('dankyuSelect')?.value||'',
+    剣道歴: document.getElementById('kendoReki')?.value||'',
+    利き手構え: document.getElementById('kikiteSelect')?.value||'',
+    得意技: wazas,
+    今の課題感: document.getElementById('kadaikan')?.value||'',
+    個人目標: document.getElementById('kojinMokuhyo')?.value||'',
+    記録日時: new Date().toLocaleString('ja-JP'),
+    記録種別: '自己理解',
+  }, barsVals);
+}
+
+function makeLocalKey(name, grade, kumi) {
+  const g = (grade || '').replace(/\s/g, '');
+  const k = (kumi  || '').replace(/\s/g, '');
+  return 'marc_profile_' + name + (g ? '_' + g : '') + (k ? '_' + k : '');
+}
+
+function submitForm(type) {
+  const name    = (document.getElementById('nameInput')?.value||'').trim();
+  const gakunen = document.getElementById('gakuNenSelect')?.value||'';
+  if (!name)    { showToast('⚠ 氏名を入力してください'); return; }
+  if (!gakunen) { showToast('⚠ 学年を選択してください'); return; }
+  const btn = document.querySelector('.submit-btn');
+  if (btn) { btn.textContent = '送信中…'; btn.disabled = true; }
+  const data = collectFormData();
+  sendToGAS(data, function(ok) {
+    if (ok) { const lsKey = makeLocalKey(name, data['学年'], data['組']); LS.set(lsKey, JSON.stringify(data)); showToast('✓ 自己理解シートを提出しました！'); }
+    else { showToast('⚠ 送信に失敗しました。一時保存して再度お試しください'); }
+    if (btn) { btn.textContent = '✦ 自己理解シートを提出する'; btn.disabled = false; }
+  });
+}
+
+function tempSave() {
+  const name = (document.getElementById('nameInput')?.value||'').trim();
+  if (!name) { showToast('⚠ 氏名を入力してから保存してください'); return; }
+  const data = collectFormData();
+  const lsKey = makeLocalKey(name, data['学年'], data['組']);
+  if (LS.set(lsKey, JSON.stringify(data))) showToast('📋 一時保存しました');
+}
+
+function phaseFor(dateStr) {
+  const d = (dateStr||'').slice(0,10);
+  if (!d) return 'pre';
+  if (marc.logs[d]) return 'done';
+  if (marc.declares[d]) return 'post';
+  return 'pre';
+}
+
+function renderLogUI() {
+  const dateEl = document.getElementById('logDate');
+  let d = (dateEl && dateEl.value) ? dateEl.value.slice(0,10) : '';
+  if (!d) {
+    const pending = Object.keys(marc.declares).filter(x => !marc.logs[x]).sort().reverse();
+    if (pending.length) { d = pending[0]; }
+    else { d = todayJST(); }
+    if (dateEl) dateEl.value = d;
+  }
+  const displayDate = document.getElementById('logDateText');
+  if (displayDate) displayDate.textContent = d.replace(/-/g, '/');
+  renderPhaseUI(d); renderDateDots(d); renderHistory(); updateLogCount();
+}
+
+function onLogDateChange() { renderLogUI(); }
+
+function renderDateDots(currentDate) {
+  const container = document.getElementById('dateDotList');
+  if (!container) return;
+  const cur = currentDate || (document.getElementById('logDate')?.value||'').slice(0,10);
+  const pending = Object.keys(marc.declares).filter(d => !marc.logs[d]).sort().reverse();
+  const done    = Object.keys(marc.logs).sort().reverse();
+  if (!pending.length && !done.length) { container.innerHTML = ''; return; }
+  let html = '<div style="font-size:9px;font-weight:700;letter-spacing:.1em;color:#7a8ea8;margin-bottom:6px;text-transform:uppercase;">稽古日を選択</div><div style="display:flex;flex-wrap:wrap;gap:6px;">';
+  pending.forEach(function(d) {
+    const isCur = d === cur;
+    html += '<button onclick="selectDate(\'' + d + '\')" style="background:' + (isCur?'#0f2044':'#fdf3dc') + ';color:' + (isCur?'#fff':'#c8952a') + ';border:2px solid ' + (isCur?'#0f2044':'#c8952a') + ';padding:7px 14px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;line-height:1.3;text-align:left;"><div>' + d.slice(5).replace('-','/') + '</div><div style="font-size:9px;margin-top:2px;">宣言済み・振り返り未</div></button>';
+  });
+  done.slice(0,5).forEach(function(d) {
+    const isCur = d === cur;
+    html += '<button onclick="selectDate(\'' + d + '\')" style="background:' + (isCur?'#0f2044':'#e6f5f0') + ';color:' + (isCur?'#fff':'#0a7c5c') + ';border:2px solid ' + (isCur?'#0f2044':'#059669') + ';padding:7px 14px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;line-height:1.3;text-align:left;"><div>✓ ' + d.slice(5).replace('-','/') + '</div><div style="font-size:9px;margin-top:2px;">振り返り済み</div></button>';
+  });
+  container.innerHTML = html + '</div>';
+}
+
+function selectDate(d) {
+  const dateEl = document.getElementById('logDate');
+  if (dateEl) dateEl.value = d;
+  const display = document.getElementById('logDateText');
+  if (display) display.textContent = d.replace(/-/g, '/');
+  renderPhaseUI(d); renderDateDots(d); renderHistory(); updateLogCount();
+}
+
+function renderPhaseUI(dateStr) {
+  const d = (dateStr||'').slice(0,10);
+  const phase = phaseFor(d);
+  const p1Card=document.getElementById('phase1Card'),p1Badge=document.getElementById('phase1Badge'),p1Tag=document.getElementById('phase1StatusTag'),p1Body=document.getElementById('phase1Body');
+  const p2Card=document.getElementById('phase2Card'),p2Badge=document.getElementById('phase2Badge'),p2Tag=document.getElementById('phase2StatusTag'),p2Body=document.getElementById('phase2Body');
+  if (!p1Card) return;
+
+  if (phase === 'pre') {
+    p1Card.className='timeline-card phase-active'; p1Badge.className='timeline-step-badge active'; p1Badge.textContent='1';
+    p1Tag.textContent='入力中'; p1Tag.style.cssText='background:var(--primary);color:#fff;';
+    p1Body.className='timeline-body';
+    p1Body.innerHTML='<div class="field-group"><label class="field-label">次回の稽古で試したいこと<span class="required">*</span></label><div class="field-hint"><strong>「〜の時、〜する」の形で書くと、稽古中に自然に思い出せます。</strong><br><span style="color:var(--primary);font-weight:600;">✓ 「相手が出てきた瞬間に、小手を合わせる」</span></div><input type="text" id="logIntent" placeholder="" oninput="autoSaveIntent(this.value)" style="border-color:var(--primary);"></div><button class="pre-submit-btn" id="preSubmitBtn" onclick="submitPreLog()">✦ チャレンジを宣言する</button>';
+    const saved=LS.get('marc_intent_draft'); const intentEl=document.getElementById('logIntent'); if(intentEl&&saved) intentEl.value=saved;
+    p2Card.className='timeline-card phase-locked'; p2Badge.className='timeline-step-badge locked'; p2Badge.textContent='2';
+    p2Tag.textContent='🔒 宣言後に解除'; p2Tag.style.cssText='background:var(--bg-warm);color:var(--ink-muted);border:1px solid var(--border);';
+    p2Body.className='timeline-body locked-body'; p2Body.innerHTML='<span style="font-size:20px;">🔒</span><span>「チャレンジを宣言する」を送信すると入力できます</span>';
+
+  } else if (phase === 'post') {
+    const decl=marc.declares[d]||{},intent=decl.intent||'';
+    p1Card.className='timeline-card phase-done'; p1Badge.className='timeline-step-badge done'; p1Badge.textContent='✓';
+    p1Tag.textContent='宣言済み ✓'; p1Tag.style.cssText='background:#ECFDF5;color:#059669;';
+    p1Body.className='timeline-body';
+    p1Body.innerHTML='<div style="background:#ECFDF5;border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;"><span style="font-size:18px;">✓</span><div><div style="font-size:13px;font-weight:700;color:#059669;">チャレンジ宣言完了</div><div style="font-size:12px;color:#047857;margin-top:1px;">稽古日：'+d+'</div></div></div><div style="font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--ink-muted);margin-bottom:5px;">宣言した内容</div><div style="padding:10px 14px;background:#f0f4ff;border-left:4px solid var(--primary);border-radius:0 8px 8px 0;font-size:14px;font-weight:600;color:var(--primary);line-height:1.6;">'+(intent||'—')+'</div><div style="margin-top:10px;font-size:11px;color:var(--ink-muted);">稽古後に振り返りを記入してください ↓</div>';
+    const editBtn=document.createElement('button'); editBtn.textContent='✎ 宣言を修正する'; editBtn.style.cssText='margin-top:8px;font-size:11px;padding:5px 14px;border:1px solid #ccc;border-radius:999px;background:transparent;color:#888;cursor:pointer;font-family:inherit;'; editBtn.onclick=function(){editDeclaration(d);}; p1Body.appendChild(editBtn);
+    p2Card.className='timeline-card phase-active'; p2Badge.className='timeline-step-badge active'; p2Badge.textContent='2';
+    p2Tag.textContent='入力中'; p2Tag.style.cssText='background:#059669;color:#fff;';
+    p2Body.className='timeline-body'; p2Body.innerHTML=buildPhase2HTML(intent);
+
+  } else if (phase === 'done') {
+    const decl=marc.declares[d]||{},log=marc.logs[d]||{};
+    p1Card.className='timeline-card phase-done'; p1Badge.className='timeline-step-badge done'; p1Badge.textContent='✓';
+    p1Tag.textContent='宣言済み ✓'; p1Tag.style.cssText='background:#ECFDF5;color:#059669;';
+    p1Body.className='timeline-body'; p1Body.innerHTML='<div style="padding:10px 14px;background:#f0f4ff;border-left:4px solid var(--primary);border-radius:0 8px 8px 0;font-size:14px;font-weight:600;color:var(--primary);line-height:1.6;">'+(decl.intent||log.intent||'—')+'</div>';
+    p2Card.className='timeline-card phase-done'; p2Badge.className='timeline-step-badge done'; p2Badge.textContent='✓';
+    p2Tag.textContent='提出済み ✓'; p2Tag.style.cssText='background:#ECFDF5;color:#059669;';
+    p2Body.className='timeline-body';
+    const fLabels=['','できなかった','少しできた','まあまあ','かなり','完全に']; const fVal=log.fulfillment||0;
+    p2Body.innerHTML='<div style="margin-bottom:8px;"><span style="font-weight:700;font-size:12px;color:#059669;">✓ 振り返り提出済み</span></div>'+(fVal?'<div style="font-size:12px;color:var(--ink-soft);margin-bottom:6px;">達成感：<strong>'+fLabels[fVal]+'</strong>（'+fVal+'/5）</div>':'')+'<div style="font-size:12px;color:var(--ink-soft);line-height:1.7;"><div style="margin-bottom:4px;"><span style="font-weight:700;">①</span> '+(log.scene||'—')+'</div><div style="margin-bottom:4px;"><span style="font-weight:700;">②</span> '+(log.why||'—')+'</div>'+(log.next?'<div><span style="font-weight:700;color:var(--primary);">③</span> '+log.next+'</div>':'')+'</div>';
+    const newBtn=document.createElement('button'); newBtn.textContent='＋ 新しい稽古を記録する'; newBtn.style.cssText='margin-top:12px;padding:10px 20px;border-radius:999px;border:2px solid var(--primary);background:transparent;color:var(--primary);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;'; newBtn.onclick=function(){startNewLog();}; p2Body.appendChild(newBtn);
   }
 }
+
+function editDeclaration(d) {
+  const decl=marc.declares[d]||{},savedIntent=decl.intent||'';
+  delete marc.declares[d]; LS.set('marc_intent_draft', savedIntent); renderPhaseUI(d);
+  const intentEl=document.getElementById('logIntent'); if(intentEl&&savedIntent) intentEl.value=savedIntent;
+  showToast('宣言内容を修正できます。変更後に再送信してください。');
+}
+
+function buildPhase2HTML(intent) {
+  return '<div class="field-group"><label class="field-label">稽古での達成感<span class="required">*</span></label><div class="field-hint" style="margin-bottom:8px;">稽古前に申告したことに対して、どれくらいできたか。直感で選んでください。</div><div class="fulfillment-grid" id="fulfillmentGrid">'+['できなかった','少しできた','まあまあ','かなり','完全に'].map(function(l,i){return'<button class="fulfillment-btn" data-val="'+(i+1)+'" onclick="window.selectFulfillment('+(i+1)+')">'+l+'<br><span style="font-size:9px;opacity:.6;">'+(i+1)+'/5</span></button>';}).join('')+'</div></div><div class="field-group"><label class="field-label">① 宣言したことを、稽古で試した結果は？<span class="required">*</span></label><div class="field-hint">できた場面・できなかった場面を具体的に。<br><span style="color:var(--gold);font-weight:500;">例：「2回試した。1回目は合わせられたが2回目は空振りした」</span></div><textarea id="logScene" style="min-height:88px"></textarea></div><div class="field-group"><label class="field-label">② なぜそうなったと思うか<span class="required">*</span></label><div class="field-hint">自分の動き・判断・準備の何が原因かを考えてください。</div><textarea id="logWhy" style="min-height:88px"></textarea></div><div class="field-group" style="margin-bottom:0;"><label class="field-label">③ 次の稽古でどう変えるか<span class="required">*</span></label><div class="field-hint">次のチャレンジ宣言につながる「次の一手」を書いてください。</div><textarea id="logNext" style="min-height:72px"></textarea></div><button class="post-submit-btn" onclick="submitLog()">✦ 振り返りを提出する</button>';
+}
+
+let fulfillmentVal = 0;
+window.selectFulfillment = function(v) {
+  fulfillmentVal = v;
+  document.querySelectorAll('.fulfillment-btn').forEach(function(b) { b.classList.toggle('selected', parseInt(b.dataset.val) === v); });
+};
+
+function submitPreLog() {
+  marc.grade=document.getElementById('gakuNenSelect')?.value||marc.grade; marc.kumi=document.getElementById('kumiInput')?.value||marc.kumi;
+  const name=marc.name,intent=(document.getElementById('logIntent')?.value||'').trim(),date=(document.getElementById('logDate')?.value||'').slice(0,10);
+  if (!name)   { showToast('⚠ 先に「自己理解」タブで氏名を入力してください'); return; }
+  if (!date)   { showToast('⚠ 稽古日を入力してください'); return; }
+  if (!intent) { showToast('⚠ チャレンジ内容を入力してください'); return; }
+  const btn=document.getElementById('preSubmitBtn');
+  if (btn) { btn.textContent='送信中…'; btn.disabled=true; }
+  const data={記録種別:'チャレンジ宣言',氏名:name,学年:marc.grade,組:marc.kumi,稽古日:date,試したいこと:intent,intent:intent,timestamp:new Date().toLocaleString('ja-JP')};
+  sendToGAS(data, function(ok) {
+    if (ok) { marc.declares[date]={intent:intent}; LS.remove('marc_intent_draft'); renderLogUI(); showToast('✓ チャレンジを宣言しました！'); }
+    else { showToast('⚠ 送信に失敗しました。再度お試しください'); }
+    if (btn) { btn.textContent='✦ チャレンジを宣言する'; btn.disabled=false; }
+  });
+}
+
+function submitLog() {
+  marc.grade=document.getElementById('gakuNenSelect')?.value||marc.grade; marc.kumi=document.getElementById('kumiInput')?.value||marc.kumi;
+  const name=marc.name,date=(document.getElementById('logDate')?.value||'').slice(0,10);
+  const scene=(document.getElementById('logScene')?.value||'').trim(),why=(document.getElementById('logWhy')?.value||'').trim(),next=(document.getElementById('logNext')?.value||'').trim();
+  const decl=marc.declares[date]||{},intent=decl.intent||'';
+  if (!name)           { showToast('⚠ 氏名が設定されていません'); return; }
+  if (!fulfillmentVal) { showToast('⚠ 達成感を選んでください'); return; }
+  if (!scene)          { showToast('⚠ ①の結果を入力してください'); return; }
+  if (!why)            { showToast('⚠ ②の原因分析を入力してください'); return; }
+  if (!next)           { showToast('⚠ ③の次への一手を入力してください'); return; }
+  const btn=document.querySelector('.post-submit-btn');
+  if (btn) { btn.textContent='送信中…'; btn.disabled=true; }
+  const data={記録種別:'稽古ログ',氏名:name,学年:marc.grade,組:marc.kumi,稽古日:date,date:date,name:name,intent:intent,試したいこと:intent,scene:scene,why:why,next:next,fulfillment:fulfillmentVal+'/5',timestamp:new Date().toLocaleString('ja-JP')};
+  sendToGAS(data, function(ok) {
+    if (ok) {
+      marc.logs[date]={intent:intent,scene:scene,why:why,next:next,fulfillment:fulfillmentVal};
+      marc.history=Object.keys(marc.logs).sort().reverse().map(function(d){return Object.assign({date:d},marc.logs[d]);});
+      fulfillmentVal=0; document.querySelectorAll('.fulfillment-btn').forEach(b=>b.classList.remove('selected'));
+      renderLogUI(); showToast('✓ 振り返りを提出しました！');
+    } else { showToast('⚠ 送信に失敗しました。再度お試しください'); }
+    if (btn) { btn.textContent='✦ 振り返りを提出する'; btn.disabled=false; }
+  });
+}
+
+function startNewLog() {
+  const today=todayJST(); const dateEl=document.getElementById('logDate'); if(dateEl) dateEl.value=today;
+  const display=document.getElementById('logDateText'); if(display) display.textContent=today.replace(/-/g,'/');
+  renderLogUI();
+}
+
+function autoSaveIntent(v) { if(v&&v.trim()) LS.set('marc_intent_draft',v.trim()); }
+
+function renderHistory() {
+  const container=document.getElementById('logHistory'); if(!container) return;
+  const entries=marc.history;
+  const fLabels=['','できなかった','少しできた','まあまあ','かなり','完全に'];
+  const fColors=['','#DC2626','#D97706','#A16207','#16A34A','#15803D'];
+  if(!entries||!entries.length){ container.innerHTML='<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;"><div style="flex:1;height:1px;background:var(--border);"></div><div style="font-size:10px;font-weight:700;color:var(--ink-muted);letter-spacing:.15em;">過去の記録</div><div style="flex:1;height:1px;background:var(--border);"></div></div><div style="text-align:center;padding:20px;color:var(--ink-muted);font-size:12px;">まだ記録がありません</div>'; return; }
+  container.innerHTML='<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;"><div style="flex:1;height:1px;background:var(--border);"></div><div style="font-size:10px;font-weight:700;color:var(--ink-muted);letter-spacing:.15em;">過去の記録</div><div style="flex:1;height:1px;background:var(--border);"></div></div>'
+    +entries.map(function(e,i){
+      const f=e.fulfillment||0,isLatest=i===0;
+      return'<div style="background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border-soft);box-shadow:var(--shadow-sm);padding:14px 18px;margin-bottom:12px;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span style="font-size:12px;font-weight:700;color:var(--ink);">'+e.date+'</span>'+(isLatest?'<span style="background:var(--primary);color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:999px;">最新</span>':'')+(f?'<span style="color:'+fColors[f]+';font-size:11px;font-weight:700;margin-left:auto;">'+fLabels[f]+'（'+f+'/5）</span>':'')+'</div>'+(e.intent?'<div style="padding:6px 10px;background:#f0f4ff;border-left:3px solid var(--primary);border-radius:0 6px 6px 0;font-size:12px;font-weight:600;color:var(--primary);margin-bottom:8px;">🎯 '+e.intent+'</div>':'')+'<div style="font-size:12px;color:var(--ink-soft);line-height:1.8;"><div><span style="font-weight:700;">①</span> '+(e.scene||'—')+'</div><div><span style="font-weight:700;">②</span> '+(e.why||'—')+'</div>'+(e.next?'<div><span style="font-weight:700;color:var(--primary);">③</span> '+e.next+'</div>':'')+'</div></div>';
+    }).join('');
+}
+
+function updateLogCount() { const el=document.getElementById('logCount'); if(el) el.textContent=Object.keys(marc.logs).length+' 件'; }
+
+function generatePrint() { showToast('⏳ GASで一覧表を生成します。'); setTimeout(()=>{window.open(GAS_URL+'?action=generatePrint','_blank');},500); }
+
+function _switchTabLegacy(tab, el) {
+    const nameEl=document.getElementById('nameInput');
+    if(nameEl&&nameEl.value.trim()){
+      marc.name=nameEl.value.trim().replace(/[　\s]+/g,''); marc.grade=document.getElementById('gakuNenSelect')?.value||''; marc.kumi=document.getElementById('kumiInput')?.value||'';
+      LS.set(LS_NAME,marc.name);
+      const logName=document.getElementById('logUserName'); if(logName){logName.textContent=marc.name;logName.style.color='var(--primary)';}
+    }
+    renderLogUI();
+}
+
+function onNameInput(el) {
+  const v=el.value.trim(); const vNorm=v.replace(/[\u3000\s]+/g,''); marc.name=vNorm; LS.set(LS_NAME,vNorm);
+  // 名前が変わったらフェッチIDを進めて前のデータを無効化
+  marc._fetchId++;
+  clearTimeout(window._nameTimer);
+  if(vNorm.length>=2){
+    window._nameTimer=setTimeout(function(){
+      marc.grade=document.getElementById('gakuNenSelect')?.value||''; marc.kumi=document.getElementById('kumiInput')?.value||'';
+      const currentId=marc._fetchId;
+      fetchUserData(marc.name,marc.grade,marc.kumi,currentId);
+    },1000);
+  }
+}
+
+function onGradeKumiChange(){
+  marc.grade=document.getElementById('gakuNenSelect')?.value||'';
+  marc.kumi=document.getElementById('kumiInput')?.value||'';
+  if(!marc.name || marc.name.length<2) return;
+  marc._fetchId++;
+  clearTimeout(window._gradeTimer);
+  window._gradeTimer=setTimeout(function(){
+    const currentId=marc._fetchId;
+    fetchUserData(marc.name,marc.grade,marc.kumi,currentId);
+  },800);
+}
+
+function openDatePicker() {
+  const native=document.getElementById('logDateNative');
+  if(native){ native.value=document.getElementById('logDate').value||todayJST(); if(native.showPicker){native.showPicker();}else{native.click();} }
+}
+
+function onNativeDateChange(val) {
+  if(!val) return;
+  const hidden=document.getElementById('logDate'),display=document.getElementById('logDateText');
+  if(hidden) hidden.value=val; if(display) display.textContent=val.replace(/-/g,'/');
+  onLogDateChange();
+}
+
+function switchTab(tab, el) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('tab-active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  const panel = document.getElementById('tab-' + tab);
+  if (panel) panel.classList.add('tab-active');
+  if (el) el.classList.add('active');
+}
+
+// ===== お知らせタブ =====
+const CAL_ID = '4b6e31801f7793e4f7384f523e9f0453747e6c45c42e6f1278f39eddb062a77f@group.calendar.google.com';
+
+function loadNews() {
+  fetch(GAS_URL + '?action=getNews', { method: 'GET' })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    if(data.status === 'ok'){
+      renderCalendarEvents(data.calendar || []);
+      renderAgenda(data.agenda || null);
+      window._allDeclares = data.declares || {};
+      renderTeams(data.teams || []);
+    }
+  })
+  .catch(function(){ /* ネットワーク失敗時は静的表示のまま */ });
+}
+
+function renderCalendarEvents(events) {
+  const el = document.getElementById('cal-events');
+  if(!el) return;
+  if(!events.length){
+    el.innerHTML = '<div style="font-size:12px;color:var(--ink-muted);padding:4px 0;">今後30日間の予定はありません</div>';
+    return;
+  }
+  el.innerHTML = events.map(function(ev){
+    const isToday = ev.today;
+    const bg  = isToday ? 'var(--primary)' : '#E6F5F0';
+    const col = isToday ? '#fff' : 'var(--primary)';
+    const txtCol = isToday ? 'var(--ink)' : 'var(--ink-soft)';
+    const timeStr = ev.time ? ' ' + ev.time : '';
+    return '<div style="display:flex;align-items:center;gap:10px;">' +
+      '<div style="background:'+bg+';color:'+col+';border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;white-space:nowrap;min-width:44px;text-align:center;">' + escH(ev.date||'') + '</div>' +
+      '<div style="font-size:13px;color:'+txtCol+';">' + escH(ev.title + timeStr) + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function renderAgenda(agenda) {
+  if(!agenda || !agenda.date) return;
+  // 日付を「6月9日（月）」形式に変換
+  const d = new Date(agenda.date + 'T00:00:00');
+  const DOW = ['日','月','火','水','木','金','土'];
+  const dateLabel = (d.getMonth()+1) + '月' + d.getDate() + '日（' + DOW[d.getDay()] + '）';
+  const timeLabel = agenda.start && agenda.end ? ' ' + agenda.start + '〜' + agenda.end : '';
+  const dateEl = document.querySelector('#tab-news .meeting-date-label');
+  if(dateEl) dateEl.textContent = dateLabel + timeLabel;
+  const agendaEl = document.getElementById('meeting-agenda');
+  if(agendaEl){
+    agendaEl.innerHTML =
+      '<div style="font-size:10px;font-weight:700;color:var(--primary);margin-bottom:2px;letter-spacing:.06em;">議題</div>' +
+      '<div style="font-size:12px;color:var(--ink);line-height:1.8;">' + escH(agenda.text || '—') + '</div>';
+  }
+}
+
+function loadCalendarEvents() { /* renderCalendarEventsに移行 */ }
+
+function openCalendarAdd() {
+  toggleCalAdd();
+}
+
+function toggleCalAdd(){
+  const form = document.getElementById('cal-add-form');
+  if(form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+function addToCalendar() {
+  const title = document.getElementById('cal-title')?.value.trim();
+  const date  = document.getElementById('cal-date')?.value;
+  const time  = document.getElementById('cal-time')?.value;
+  if (!title || !date) { showToast('⚠ タイトルと日付を入力してください'); return; }
+  const d = date.replace(/-/g, '');
+  const startHH = time ? time.split(':')[0] : '09';
+  const startMM = time ? time.split(':')[1] : '00';
+  const endHH   = time ? String(parseInt(startHH)+1).padStart(2,'0') : '10';
+  const start = d + 'T' + startHH + startMM + '00';
+  const end   = d + 'T' + endHH + startMM + '00';
+  const url = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(title) + '&dates=' + start + '/' + end + '&cid=' + encodeURIComponent(CAL_ID);
+  window.open(url, '_blank');
+  document.getElementById('cal-add-form').style.display = 'none';
+  showToast('✓ Googleカレンダーで確認してください');
+}
+
+function renderTeams(teams) {
+  const el = document.getElementById('team-list');
+  if(!el) return;
+  if(!teams.length){
+    el.innerHTML = '<div style="font-size:12px;color:var(--ink-muted);text-align:center;padding:16px 0;">チーム編成はまだ設定されていません</div>';
+    return;
+  }
+  el.innerHTML = teams.map(function(t){
+    const members = t.members || [];
+    const leader = t.leader || members[0] || '';
+    const sub    = t.sub    || members[1] || '';
+    const memberStr = members.join('・');
+    // GASから取得した全員の最新チャレンジ宣言を使用
+    const declaresHtml = members.map(function(m){
+      const mNorm = m.replace(/[\u3000\s]+/g, '');
+      const declData = (window._allDeclares || {})[mNorm] || null;
+      const text = declData ? (declData.intent || '') : null;
+      return '<div style="display:flex;gap:10px;align-items:flex-start;">' +
+        '<span style="font-size:11px;font-weight:700;color:var(--ink-muted);min-width:36px;flex-shrink:0;">' + escH(m) + '</span>' +
+        (text !== null
+          ? '<span style="font-size:12px;color:var(--ink);line-height:1.5;">' + (text ? escH(text) : '<span style="color:var(--ink-muted);font-style:italic;">未入力</span>') + '</span>'
+          : '<span style="font-size:12px;color:var(--ink-muted);">—</span>') +
+      '</div>';
+    }).join('');
+    return '<div class="team-card" style="border:1px solid var(--border-soft);border-radius:var(--radius-md);padding:12px 14px;margin-bottom:10px;">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">' +
+        '<div style="font-size:14px;font-weight:700;color:var(--ink);">' + escH(t.name) + '</div>' +
+        '<div style="display:flex;gap:6px;">' +
+          (leader ? '<span style="background:#E6F5F0;color:#0F6E56;font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;">リーダー：' + escH(leader) + '</span>' : '') +
+          (sub    ? '<span style="background:#EEF2FF;color:#3730A3;font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;">サブリーダー：' + escH(sub) + '</span>' : '') +
+        '</div>' +
+      '</div>' +
+      '<div style="font-size:12px;color:var(--ink-muted);margin-bottom:8px;">' + escH(memberStr) + '</div>' +
+      '<div style="background:var(--bg-warm);border-left:3px solid var(--primary);border-radius:0 6px 6px 0;padding:7px 10px;margin-bottom:10px;">' +
+        '<div style="font-size:10px;font-weight:700;color:var(--primary);margin-bottom:2px;letter-spacing:.06em;">稽古テーマ</div>' +
+        '<div style="font-size:12px;color:' + (t.theme ? 'var(--ink)' : 'var(--ink-muted)') + ';' + (t.theme ? '' : 'font-style:italic;') + '">' + escH(t.theme || '自由に稽古テーマを設定してください') + '</div>' +
+      '</div>' +
+      (t.criteria ? '<div style="background:#f5f7fa;border-left:3px solid #888;border-radius:0 6px 6px 0;padding:7px 10px;margin-bottom:10px;">' +
+        '<div style="font-size:10px;font-weight:700;color:#666;margin-bottom:2px;letter-spacing:.06em;">選出基準</div>' +
+        '<div style="font-size:12px;color:var(--ink);line-height:1.6;">' + escH(t.criteria) + '</div>' +
+      '</div>' : '') +
+      '<div style="border-top:1px solid var(--border-soft);padding-top:10px;">' +
+        '<div style="font-size:10px;font-weight:700;color:var(--ink-muted);letter-spacing:.06em;margin-bottom:8px;">🎯 チャレンジ宣言</div>' +
+        '<div style="display:flex;flex-direction:column;gap:6px;">' + declaresHtml + '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function loadTeams() { /* renderTeamsに移行 */ }
+
+function escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+document.addEventListener('DOMContentLoaded', () => {
+  marc.name=''; marc.grade=''; marc.kumi='';
+  const storedName=LS.get(LS_NAME)||'';
+  if(storedName){
+    marc.name=storedName.replace(/[\u3000\s]+/g,'');
+    const ni=document.getElementById('nameInput'); if(ni) ni.value=storedName;
+    const lu=document.getElementById('logUserName'); if(lu){lu.textContent=storedName;lu.style.color='var(--primary)';}
+    marc._fetchId++; const initId=marc._fetchId;
+    fetchUserData(storedName,marc.grade,marc.kumi,initId);
+  }
+  // 稽古日は空のまま初期化し、renderLogUI()内で「未振り返りの宣言があればその日付」を
+  // 優先選択させる。これにより宣言送信後に再読み込みしても稽古日が今日に
+  // 上書きされて振り返りロックがかかる事故を防ぐ。
+  renderLogUI();
+  loadNews();
+});
+</script>
+</body>
+</html>
