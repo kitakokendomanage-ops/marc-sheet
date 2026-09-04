@@ -202,6 +202,115 @@
   .bars-anchor-row.selected .bars-anchor-text { color: var(--ink); font-weight: 500; }
   .bars-selected-label { font-size: 11px; color: var(--ink-muted); margin-top: 8px; text-align: right; min-height: 16px; letter-spacing: .04em; }
   .bars-selected-label span { color: var(--gold); font-weight: 700; }
+  /* ===== 専用AI（NotebookLM）リンク ===== */
+  .ai-link { display: flex; align-items: center; gap: 13px; background: linear-gradient(120deg, #1a3a6b 0%, #2a5298 60%, #34608f 100%); color: #fff; border-radius: var(--radius-lg); padding: 14px 18px; margin-bottom: 14px; text-decoration: none; box-shadow: 0 4px 18px rgba(26,58,107,0.28), 0 0 0 1px rgba(212,173,26,0.35) inset; transition: all .25s ease; }
+  .ai-link:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(26,58,107,0.35), 0 0 0 1px rgba(212,173,26,0.55) inset; }
+  .ai-link:hover { filter: brightness(1.06); transform: translateY(-1px); box-shadow: var(--shadow-lg); }
+  .ai-link-icon { font-size: 24px; flex-shrink: 0; filter: drop-shadow(0 0 5px rgba(212,173,26,0.8)); }
+  .ai-link-body { flex: 1; }
+  .ai-link-title { font-size: 15px; font-weight: 700; letter-spacing: .04em; }
+  .ai-link-sub { font-size: 11px; color: rgba(255,255,255,0.8); margin-top: 2px; }
+  .ai-link-arrow { font-size: 20px; color: rgba(255,255,255,0.75); flex-shrink: 0; }
+  /* ===== 剣道日記（成長日誌） ===== */
+  .diary-wrap { background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border-soft); box-shadow: var(--shadow-sm); padding: 18px 20px; margin-bottom: 14px; }
+  .diary-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .diary-title { font-size: 15px; font-weight: 700; color: var(--primary); letter-spacing: .04em; }
+  .diary-date { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--ink-muted); background: var(--bg-warm); padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+  .diary-sub { font-size: 11px; color: var(--ink-muted); margin-bottom: 16px; }
+  .diary-name-row { margin-bottom: 18px; }
+  .diary-name-label { font-size: 11px; font-weight: 700; color: var(--ink-soft); letter-spacing: .06em; margin-bottom: 6px; display: block; }
+  .diary-name-input { width: 100%; padding: 11px 14px !important; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 16px !important; color: var(--ink); }
+  .diary-name-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26,58,107,0.08); outline: none; }
+  .diary-q { margin-bottom: 20px; padding-bottom: 18px; border-bottom: 1px solid var(--border-soft); }
+  .diary-q:last-of-type { border-bottom: none; }
+  .diary-q-label { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 4px; line-height: 1.5; }
+  .diary-q-hint { font-size: 11px; color: var(--ink-muted); line-height: 1.6; margin-bottom: 10px; }
+  .diary-q-hint .anchor { display: flex; justify-content: space-between; margin-top: 4px; font-size: 10px; }
+  /* 5段階スケール */
+  .diary-scale { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .diary-scale-btn { padding: 12px 4px; border: 1.5px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--ink-soft); font-size: 16px; font-weight: 700; font-family: inherit; cursor: pointer; transition: all .15s; -webkit-tap-highlight-color: transparent; }
+  .diary-scale-btn:active { transform: scale(.96); }
+  .diary-scale-btn.selected { background: var(--primary); border-color: var(--primary); color: #fff; box-shadow: 0 2px 8px rgba(26,58,107,0.25); }
+  .diary-scale-ends { display: flex; justify-content: space-between; margin-top: 6px; font-size: 10px; color: var(--ink-muted); }
+  /* チェックボックス群 */
+  .diary-checks { display: flex; flex-wrap: wrap; gap: 8px; }
+  .diary-check-btn { padding: 9px 14px; border: 1.5px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--ink-soft); font-size: 13px; font-family: inherit; cursor: pointer; transition: all .15s; -webkit-tap-highlight-color: transparent; font-weight: 500; }
+  .diary-check-btn:active { transform: scale(.97); }
+  .diary-check-btn.selected { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 700; box-shadow: 0 2px 8px rgba(26,58,107,0.2); }
+  .diary-other-input { width: 100%; margin-top: 10px; padding: 10px 12px !important; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 14px !important; display: none; }
+  .diary-other-input.show { display: block; }
+  .diary-other-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26,58,107,0.08); outline: none; }
+  /* 自由記述 */
+  .diary-free { width: 100%; padding: 11px 14px !important; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 14px !important; min-height: 72px; resize: vertical; line-height: 1.7; }
+  .diary-free:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26,58,107,0.08); outline: none; }
+  /* 提出ボタン */
+  .diary-submit-btn { width: 100%; margin-top: 6px; padding: 14px; background: linear-gradient(135deg, var(--primary), var(--primary-lt)); color: #fff; border: none; border-radius: var(--radius-md); font-family: inherit; font-size: 15px; font-weight: 700; letter-spacing: .04em; cursor: pointer; transition: all .2s; box-shadow: 0 3px 12px rgba(26,58,107,0.25); }
+  .diary-submit-btn:hover { filter: brightness(1.07); transform: translateY(-1px); }
+  .diary-submit-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+  /* ===== リーダー配置表 ===== */
+  .leaders-wrap { background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border-soft); box-shadow: var(--shadow-sm); padding: 16px 20px; margin-bottom: 14px; }
+  .leaders-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .leaders-title { font-size: 13px; font-weight: 700; color: var(--primary); letter-spacing: .04em; }
+  .leaders-save-hint { font-size: 10px; color: var(--ink-muted); }
+  .leaders-table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--border-soft); border-radius: var(--radius-md); }
+  .leaders-table { width: 100%; border-collapse: collapse; min-width: 560px; }
+  .leaders-table thead tr { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-lt) 100%); }
+  .leaders-table th { padding: 0 12px; height: 42px; text-align: center; font-size: 11px; font-weight: 700; color: #fff; letter-spacing: .04em; border-right: 1px solid rgba(255,255,255,0.15); vertical-align: middle; white-space: nowrap; }
+  .leaders-table th:last-child { border-right: none; }
+  .leaders-table tbody tr.lead-main { border-bottom: 1px solid var(--border-soft); cursor: pointer; transition: background .2s; }
+  .leaders-table tbody tr.lead-main:hover { background: var(--surface-2); }
+  .leaders-table tbody tr.lead-main.expanded { background: rgba(26,58,107,0.06); }
+  /* 詳細パネル（横スクロールの外・カード型） */
+  .lead-detail-panel { display: none; margin-top: 12px; background: var(--surface-2); border: 1.5px solid var(--primary); border-radius: var(--radius-md); overflow: hidden; }
+  .lead-detail-panel.active { display: block; }
+  .lead-detail-head { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-lt) 100%); color: #fff; font-size: 13px; font-weight: 700; padding: 12px 16px; letter-spacing: .04em; display: flex; align-items: center; gap: 8px; }
+  .lead-detail-head-num { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; background: rgba(255,255,255,0.2); border-radius: 50%; font-size: 12px; font-weight: 800; }
+  .leaders-table td { padding: 0 12px; height: 52px; font-size: 12px; color: var(--ink-soft); border-right: 1px solid var(--border-soft); vertical-align: middle; }
+  .leaders-table td:last-child { border-right: none; }
+  .lead-cat { background: rgba(26,58,107,0.04); text-align: center; width: 78px; }
+  .lead-cat-icon { width: 22px; height: 22px; display: block; margin: 0 auto 3px; }
+  .lead-cat-icon svg { width: 100%; height: 100%; stroke: var(--primary); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+  .lead-cat-num { font-size: 13px; font-weight: 800; color: var(--primary); display: block; line-height: 1.1; }
+  .lead-cat-label { font-size: 11px; font-weight: 700; color: var(--primary); display: block; line-height: 1.2; margin-top: 2px; }
+  .leaders-table tbody tr.lead-main:hover .lead-cat-icon svg { stroke: var(--gold); }
+  .lead-role { text-align: center; font-weight: 700; color: var(--primary); width: 120px; }
+  .lead-persons { width: 150px; }
+  .lead-persons-inner { display: flex; align-items: center; gap: 8px; }
+  .lead-person-tag { display: inline-block; background: var(--gold-pale); color: var(--primary); padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin: 2px 4px 2px 0; }
+  .lead-caret { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; flex-shrink: 0; transition: transform .25s cubic-bezier(.22,1,.36,1); }
+  .lead-caret svg { width: 16px; height: 16px; stroke: var(--primary); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+  .leaders-table tbody tr.lead-main.expanded .lead-caret { transform: rotate(180deg); }
+  .lead-plan { cursor: pointer; }
+  .lead-plan-box { padding: 7px 10px; background: var(--gold-pale); border-left: 3px solid var(--gold); border-radius: 0 6px 6px 0; color: var(--primary); font-weight: 500; font-size: 12px; }
+  .lead-plan-month { font-weight: 700; color: var(--gold); margin-right: 6px; }
+  .lead-plan-empty { color: var(--ink-muted); font-style: italic; }
+  .lead-detail-content { padding: 16px; }
+  .lead-detail-sec { margin-bottom: 18px; }
+  .lead-detail-sec:last-child { margin-bottom: 0; }
+  .lead-detail-title { font-size: 11px; font-weight: 700; color: var(--primary); letter-spacing: .06em; margin-bottom: 8px; }
+  .lead-person-inputs { display: flex; flex-direction: column; gap: 8px; }
+  .lead-person-row { display: flex; align-items: center; gap: 8px; }
+  .lead-person-label { font-size: 10px; color: var(--ink-muted); font-weight: 600; width: 52px; flex-shrink: 0; }
+  .lead-person-input { flex: 1; padding: 8px 10px !important; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 13px !important; font-weight: 600; color: var(--primary); }
+  .lead-expect-input { width: 100%; padding: 10px !important; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 13px !important; min-height: 56px; resize: vertical; color: var(--ink-soft); line-height: 1.6; }
+  .lead-plan-item { display: flex; gap: 8px; margin-bottom: 8px; align-items: flex-start; }
+  .lead-plan-month-in { width: 58px; flex-shrink: 0; padding: 8px !important; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 13px !important; text-align: center; font-weight: 600; }
+  .lead-plan-text-in { flex: 1; padding: 8px !important; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 13px !important; min-height: 52px; resize: vertical; line-height: 1.6; }
+  .lead-plan-del { width: 30px; height: 30px; min-height: 30px; padding: 0; border: 1px solid var(--border); background: var(--surface); border-radius: var(--radius-sm); cursor: pointer; font-weight: bold; color: var(--ink-muted); flex-shrink: 0; margin-top: 6px; transition: all .2s; }
+  .lead-plan-del:hover { border-color: var(--gold); color: var(--gold); }
+  .lead-add-plan { margin-top: 8px; padding: 9px 16px; min-height: 40px; border: 1.5px solid var(--primary); background: rgba(26,58,107,0.04); color: var(--primary); border-radius: var(--radius-sm); cursor: pointer; font-weight: 600; font-size: 12px; font-family: inherit; transition: all .2s; }
+  .lead-add-plan:hover { background: var(--primary); color: #fff; }
+  .lead-save-btn { width: 100%; margin-top: 6px; padding: 12px; background: linear-gradient(135deg, var(--primary), var(--primary-lt)); color: #fff; border: none; border-radius: var(--radius-md); font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; letter-spacing: .04em; transition: all .2s; box-shadow: 0 3px 12px rgba(26,58,107,0.25); }
+  .lead-save-btn:hover { filter: brightness(1.07); transform: translateY(-1px); }
+  .lead-save-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+  @media (max-width: 480px) {
+    .leaders-wrap { padding: 14px 12px; }
+    .leaders-table th { font-size: 10px; padding: 0 8px; }
+    .leaders-table td { padding: 0 8px; font-size: 11px; }
+    .lead-cat { width: 64px; }
+    .lead-role { width: 90px; font-size: 11px; }
+  }
+/* ===LEADERS_CSS_INSERT=== */
 </style>
 </head>
 <body>
@@ -224,13 +333,144 @@
   </div>
 
   <div class="tab-bar">
-    <button class="tab-btn active" onclick="switchTab('news', this)">📣 お知らせ</button>
-    <button class="tab-btn" onclick="switchTab('profile', this)">👤 自己理解（現在地）</button>
-    <button class="tab-btn" onclick="switchTab('log', this)">⚔ 稽古ログ（目的地）</button>
+    <button class="tab-btn active" onclick="switchTab('news', this)">📣 自己管理</button>
+    <button class="tab-btn" onclick="switchTab('profile', this)">👤 自己理解</button>
+    <button class="tab-btn" onclick="switchTab('log', this)">⚔ 稽古ログ</button>
   </div>
 
   <!-- お知らせタブ -->
   <div class="tab-panel tab-active" id="tab-news">
+
+    <!-- 専用AI（NotebookLM）リンク -->
+    <a href="https://notebooklm.google.com/" target="_blank" class="ai-link">
+      <span class="ai-link-icon">✨</span>
+      <div class="ai-link-body">
+        <div class="ai-link-title">専用AIに相談する</div>
+        <div class="ai-link-sub">NotebookLM｜稽古や課題について質問できます</div>
+      </div>
+      <span class="ai-link-arrow">›</span>
+    </a>
+
+    <!-- 剣道日記（成長日誌） -->
+    <div class="diary-wrap">
+      <div class="diary-head">
+        <span style="font-size:16px;">📔</span>
+        <span class="diary-title">剣道日記</span>
+        <span class="diary-date" id="diary-date"></span>
+      </div>
+      <div class="diary-sub">今日の稽古をふりかえって記録しよう</div>
+
+      <div class="diary-name-row">
+        <label class="diary-name-label">名前<span style="color:var(--red);margin-left:2px;">*</span></label>
+        <input type="text" id="diary-name" class="diary-name-input" placeholder="名前を入力" oninput="onDiaryNameInput(this)">
+      </div>
+
+      <!-- Q1 -->
+      <div class="diary-q">
+        <div class="diary-q-label">Q1　今日のコンディションは？</div>
+        <div class="diary-q-hint">体調・疲れ・気分などを含めた、今日の自分の状態</div>
+        <div class="diary-scale" data-q="q1">
+          <button class="diary-scale-btn" data-v="1" onclick="diaryScale(this,'q1')">1</button>
+          <button class="diary-scale-btn" data-v="2" onclick="diaryScale(this,'q1')">2</button>
+          <button class="diary-scale-btn" data-v="3" onclick="diaryScale(this,'q1')">3</button>
+          <button class="diary-scale-btn" data-v="4" onclick="diaryScale(this,'q1')">4</button>
+          <button class="diary-scale-btn" data-v="5" onclick="diaryScale(this,'q1')">5</button>
+        </div>
+        <div class="diary-scale-ends"><span>1＝かなり悪い</span><span>3＝普通</span><span>5＝かなり良い</span></div>
+      </div>
+
+      <!-- Q2 -->
+      <div class="diary-q">
+        <div class="diary-q-label">Q2　今日の稽古の負荷は？</div>
+        <div class="diary-q-hint">「実際の稽古量」ではなく、自分が感じた稽古のきつさ</div>
+        <div class="diary-scale" data-q="q2">
+          <button class="diary-scale-btn" data-v="1" onclick="diaryScale(this,'q2')">1</button>
+          <button class="diary-scale-btn" data-v="2" onclick="diaryScale(this,'q2')">2</button>
+          <button class="diary-scale-btn" data-v="3" onclick="diaryScale(this,'q2')">3</button>
+          <button class="diary-scale-btn" data-v="4" onclick="diaryScale(this,'q2')">4</button>
+          <button class="diary-scale-btn" data-v="5" onclick="diaryScale(this,'q2')">5</button>
+        </div>
+        <div class="diary-scale-ends"><span>1＝とても楽</span><span>3＝普通</span><span>5＝とてもきつい</span></div>
+      </div>
+
+      <!-- Q3 -->
+      <div class="diary-q">
+        <div class="diary-q-label">Q3　今日の稽古は充実していた？</div>
+        <div class="diary-scale" data-q="q3">
+          <button class="diary-scale-btn" data-v="1" onclick="diaryScale(this,'q3')">1</button>
+          <button class="diary-scale-btn" data-v="2" onclick="diaryScale(this,'q3')">2</button>
+          <button class="diary-scale-btn" data-v="3" onclick="diaryScale(this,'q3')">3</button>
+          <button class="diary-scale-btn" data-v="4" onclick="diaryScale(this,'q3')">4</button>
+          <button class="diary-scale-btn" data-v="5" onclick="diaryScale(this,'q3')">5</button>
+        </div>
+        <div class="diary-scale-ends"><span>1＝まったく充実せず</span><span>3＝普通</span><span>5＝とても充実</span></div>
+      </div>
+
+      <!-- Q4 -->
+      <div class="diary-q">
+        <div class="diary-q-label">Q4　今日、特に意識したことは？</div>
+        <div class="diary-q-hint">複数選択可</div>
+        <div class="diary-checks" data-q="q4">
+          <button class="diary-check-btn" onclick="diaryCheck(this)">基本動作（足さばき・素振りなど）</button>
+          <button class="diary-check-btn" onclick="diaryCheck(this)">身体の使い方</button>
+          <button class="diary-check-btn" onclick="diaryCheck(this)">構え・姿勢</button>
+          <button class="diary-check-btn" onclick="diaryCheck(this)">技（しかけ技・応じ技・打突）</button>
+          <button class="diary-check-btn" onclick="diaryCheck(this)">間合い・攻め</button>
+          <button class="diary-check-btn" onclick="diaryCheck(this)">防御・守り</button>
+          <button class="diary-check-btn" onclick="diaryCheck(this)">タイミング・拍子</button>
+          <button class="diary-check-btn" onclick="diaryCheck(this)">判断・対応・修正</button>
+          <button class="diary-check-btn" onclick="diaryCheck(this)">声出し・集中・気持ち</button>
+          <button class="diary-check-btn" onclick="diaryCheck(this)">仲間への声かけ・サポート</button>
+          <button class="diary-check-btn" onclick="diaryCheckOther(this)">その他</button>
+        </div>
+        <input type="text" id="diary-q4-other" class="diary-other-input" placeholder="その他の内容を入力">
+      </div>
+
+      <!-- Q5 -->
+      <div class="diary-q">
+        <div class="diary-q-label">Q5　今日、意識したことについて、どんな変化があった？</div>
+        <div class="diary-q-hint">複数選択可</div>
+        <div class="diary-checks" data-q="q5">
+          <button class="diary-check-btn" onclick="diaryCheck(this)">うまくできた</button>
+          <button class="diary-check-btn" onclick="diaryCheck(this)">少しうまくできた</button>
+          <button class="diary-check-btn" onclick="diaryCheck(this)">うまくできなかった</button>
+          <button class="diary-check-btn" onclick="diaryCheck(this)">新しいことを試した</button>
+          <button class="diary-check-btn" onclick="diaryCheck(this)">気づいたことがあった</button>
+          <button class="diary-check-btn" onclick="diaryCheck(this)">特に変化なし</button>
+        </div>
+      </div>
+
+      <!-- 自由記述 -->
+      <div class="diary-q">
+        <div class="diary-q-label">＋ 今日、残しておきたいことがあれば一言</div>
+        <textarea id="diary-free" class="diary-free" placeholder="自由に記入"></textarea>
+      </div>
+
+      <button class="diary-submit-btn" id="diary-submit-btn" onclick="submitDiary()">✦ 提出する</button>
+    </div>
+
+    <!-- リーダー配置表 -->
+    <div class="leaders-wrap">
+      <div class="leaders-head">
+        <div class="leaders-title">🏹 リーダー配置表</div>
+        <div class="leaders-save-hint">全員共通・入力すると全員に反映されます</div>
+      </div>
+      <div class="leaders-table-scroll">
+        <table class="leaders-table">
+          <thead>
+            <tr>
+              <th>分類</th>
+              <th>役割</th>
+              <th>担当者</th>
+              <th>最新実施計画</th>
+            </tr>
+          </thead>
+          <tbody id="leaders-tbody"></tbody>
+        </table>
+      </div>
+      <div id="leaders-detail-area"></div>
+    </div>
+
 
     <!-- カレンダー -->
     <div style="background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border-soft);box-shadow:var(--shadow-sm);padding:16px 20px;margin-bottom:14px;">
@@ -1174,7 +1414,408 @@ document.addEventListener('DOMContentLoaded', () => {
   // 上書きされて振り返りロックがかかる事故を防ぐ。
   renderLogUI();
   loadNews();
+  loadDiaryName();
+  setDiaryDate();
+  buildLeadersTable();
+  loadLeaders();
 });
+// ===== 剣道日記（成長日誌） =====
+// 名前は既存の marc_user_name キャッシュを共有し、GASからも照合する。
+const diaryState = { q1:0, q2:0, q3:0 };
+
+// スケール（Q1〜Q3）選択
+function diaryScale(btn, q) {
+  const group = document.querySelector('.diary-scale[data-q="'+q+'"]');
+  group.querySelectorAll('.diary-scale-btn').forEach(function(b){ b.classList.remove('selected'); });
+  btn.classList.add('selected');
+  diaryState[q] = parseInt(btn.dataset.v);
+}
+
+// チェックボックス（Q4/Q5）トグル
+function diaryCheck(btn) {
+  btn.classList.toggle('selected');
+}
+
+// Q4「その他」トグル（テキスト欄の表示切替も）
+function diaryCheckOther(btn) {
+  btn.classList.toggle('selected');
+  const other = document.getElementById('diary-q4-other');
+  if (btn.classList.contains('selected')) {
+    other.classList.add('show');
+    setTimeout(function(){ other.focus(); }, 100);
+  } else {
+    other.classList.remove('show');
+    other.value = '';
+  }
+}
+
+// 名前入力：キャッシュに保存（既存の氏名キャッシュと共有）
+function onDiaryNameInput(el) {
+  const v = el.value.trim();
+  const vNorm = v.replace(/[\u3000\s]+/g, '');
+  if (typeof LS !== 'undefined') LS.set(LS_NAME, vNorm);
+  if (typeof marc !== 'undefined') marc.name = vNorm;
+  // 自己理解タブの氏名欄・記録者表示も同期
+  const ni = document.getElementById('nameInput'); if (ni && !ni.value) ni.value = v;
+  const lu = document.getElementById('logUserName'); if (lu && vNorm) { lu.textContent = vNorm; lu.style.color = 'var(--primary)'; }
+}
+
+// 起動時：キャッシュ→GASの順で名前を復元（二重）
+// 今日の日付をタイトル横に表示（例：9/3(水)）
+function setDiaryDate() {
+  const el = document.getElementById('diary-date');
+  if (!el) return;
+  const now = new Date();
+  const m = now.getMonth() + 1;
+  const d = now.getDate();
+  const dow = ['日','月','火','水','木','金','土'][now.getDay()];
+  el.textContent = m + '/' + d + '(' + dow + ')';
+}
+
+function loadDiaryName() {
+  const nameEl = document.getElementById('diary-name');
+  if (!nameEl) return;
+  // ① まずキャッシュから即時復元
+  const cached = (typeof LS !== 'undefined') ? (LS.get(LS_NAME) || '') : '';
+  if (cached) nameEl.value = cached;
+  // ② GASからも照合（自己理解データに氏名があれば、それを正とする）
+  if (cached && cached.length >= 2) {
+    fetch(GAS_URL + '?' + new URLSearchParams({ name: cached }).toString(), { method: 'GET' })
+    .then(function(res){ return res.text(); })
+    .then(function(text){
+      try {
+        const json = JSON.parse(text);
+        if (json.status === 'ok' && json.data && json.data['氏名']) {
+          // GAS側に氏名がある場合はそれで上書き（表記ゆれ対策）
+          if (!nameEl.value.trim()) nameEl.value = json.data['氏名'];
+        }
+      } catch(e) {}
+    })
+    .catch(function(){});
+  }
+}
+
+// 提出
+function submitDiary() {
+  const nameEl = document.getElementById('diary-name');
+  const name = (nameEl.value || '').trim();
+  if (!name) { showToast('⚠ 名前を入力してください'); nameEl.focus(); return; }
+
+  // Q4/Q5の選択を収集
+  const q4 = Array.from(document.querySelectorAll('.diary-checks[data-q="q4"] .diary-check-btn.selected'))
+    .map(function(b){ return b.textContent.trim(); });
+  const q4other = (document.getElementById('diary-q4-other').value || '').trim();
+  // 「その他」が選択されていて自由入力がある場合、その他→入力値に置換
+  const q4list = q4.map(function(x){ return x === 'その他' && q4other ? 'その他:' + q4other : x; });
+  const q5 = Array.from(document.querySelectorAll('.diary-checks[data-q="q5"] .diary-check-btn.selected'))
+    .map(function(b){ return b.textContent.trim(); });
+  const free = (document.getElementById('diary-free').value || '').trim();
+
+  const btn = document.getElementById('diary-submit-btn');
+  btn.textContent = '送信中…'; btn.disabled = true;
+
+  const data = {
+    記録種別: '剣道日記',
+    氏名: name,
+    記録日: todayJST(),
+    Q1コンディション: diaryState.q1 || '',
+    Q2負荷: diaryState.q2 || '',
+    Q3充実度: diaryState.q3 || '',
+    Q4意識したこと: q4list.join('・'),
+    Q5変化: q5.join('・'),
+    一言: free,
+    timestamp: new Date().toLocaleString('ja-JP')
+  };
+  const payload = Object.assign({}, data, { _token: WRITE_TOKEN });
+
+  fetch(GAS_URL, {
+    method: 'POST', mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(payload)
+  })
+  .then(function(){
+    // 名前キャッシュは維持。名前以外をクリアして次の入力に備える。
+    resetDiaryForm();
+    showToast('✓ 提出しました！');
+    btn.textContent = '✦ 提出する'; btn.disabled = false;
+  })
+  .catch(function(){
+    showToast('⚠ 送信に失敗しました。再度お試しください');
+    btn.textContent = '✦ 提出する'; btn.disabled = false;
+  });
+}
+
+// 名前以外をクリア
+function resetDiaryForm() {
+  diaryState.q1 = 0; diaryState.q2 = 0; diaryState.q3 = 0;
+  document.querySelectorAll('.diary-scale-btn.selected').forEach(function(b){ b.classList.remove('selected'); });
+  document.querySelectorAll('.diary-check-btn.selected').forEach(function(b){ b.classList.remove('selected'); });
+  const other = document.getElementById('diary-q4-other');
+  if (other) { other.value = ''; other.classList.remove('show'); }
+  const free = document.getElementById('diary-free');
+  if (free) free.value = '';
+}
+
+// ===== リーダー配置表 =====
+const leaderRoles = [
+  { num:'１', label:'方向', role:'キャプテン',        max:2, icon:'<polyline points="12 5 12 19"></polyline><polyline points="5 12 12 5 19 12"></polyline>' },
+  { num:'２', label:'統制', role:'副キャプテン',      max:4, icon:'<path d="M10 17H7a2 2 0 0 0-2 2v2h16v-2a2 2 0 0 0-2-2h-3"></path><path d="M16 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"></path><circle cx="8" cy="12" r="2.5"></circle><circle cx="16" cy="12" r="2.5"></circle>' },
+  { num:'３', label:'稽古', role:'稽古研究リーダー',  max:3, icon:'<path d="M6 4l6-2 6 2v8c0 3.31-3 6-6 6s-6-2.69-6-6V4z"></path><line x1="12" y1="8" x2="12" y2="16"></line>' },
+  { num:'４', label:'技術', role:'基本動作リーダー',  max:3, icon:'<path d="M12 2v20"></path><path d="M2 12h20"></path><circle cx="12" cy="12" r="8"></circle>' },
+  { num:'５', label:'気勢', role:'気勢リーダー',      max:3, icon:'<path d="M23 7l-7 5 7 5V7z"></path><path d="M1 5h15a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H1a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"></path>' },
+  { num:'６', label:'身体', role:'基礎体力リーダー',  max:3, icon:'<path d="M6 4h12v1H6zm0 3h12v7H6zm0 9h12v1H6zm2-6v6m4-6v6m4-6v6"></path>' },
+  { num:'７', label:'心理', role:'悩み相談リーダー',  max:3, icon:'<circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line>' },
+  { num:'８', label:'礼儀', role:'品格リーダー',      max:3, icon:'<path d="M12 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"></path><path d="M12 13c-5.33 0-8 2.67-8 4v3h16v-3c0-1.33-2.67-4-8-4z"></path>' },
+  { num:'９', label:'発信', role:'広報リーダー',      max:3, icon:'<path d="M4 12a8 8 0 0 1 15.3-3.6"></path><path d="M20 12a8 8 0 0 1-15.3 3.6"></path><path d="M12 2v9m0 0l-3-3m3 3l3-3"></path>' },
+  { num:'１０',label:'学習', role:'学習リーダー',      max:3, icon:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v15H6.5z"></path><line x1="10" y1="6" x2="16" y2="6"></line><line x1="10" y1="10" x2="16" y2="10"></line>' }
+];
+
+// GASから取得したリーダーデータの保管
+let leadersData = {};
+
+function buildLeadersTable() {
+  const tbody = document.getElementById('leaders-tbody');
+  const detailArea = document.getElementById('leaders-detail-area');
+  if (!tbody || !detailArea) return;
+  tbody.innerHTML = '';
+  detailArea.innerHTML = '';
+  leaderRoles.forEach(function(r, idx) {
+    // メイン行（テーブル内）
+    const main = document.createElement('tr');
+    main.className = 'lead-main';
+    main.dataset.idx = idx;
+    main.onclick = function(){ toggleLeaderDetail(idx); };
+    main.innerHTML =
+      '<td class="lead-cat"><span class="lead-cat-icon"><svg viewBox="0 0 24 24">'+r.icon+'</svg></span>'
+      +'<span class="lead-cat-num">'+r.num+'</span><span class="lead-cat-label">'+r.label+'</span></td>'
+      +'<td class="lead-role">'+r.role+'</td>'
+      +'<td class="lead-persons"><div class="lead-persons-inner"><span class="lead-caret"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg></span>'
+        +'<div class="lead-person-disp" data-idx="'+idx+'"></div></div></td>'
+      +'<td class="lead-plan" onclick="event.stopPropagation();editLeaderPlan('+idx+')"><div class="lead-plan-box" data-idx="'+idx+'"></div></td>';
+    tbody.appendChild(main);
+
+    // 詳細パネル（テーブルの外＝横スクロールの外）
+    const detail = document.createElement('div');
+    detail.className = 'lead-detail-panel';
+    detail.dataset.idx = idx;
+    let personRows = '';
+    for (let i = 0; i < r.max; i++) {
+      personRows += '<div class="lead-person-row"><span class="lead-person-label">担当'+(i+1)+'</span>'
+        +'<input type="text" class="lead-person-input" data-idx="'+idx+'" data-p="'+i+'" placeholder="名前を入力" oninput="updateLeaderDisplay('+idx+')"></div>';
+    }
+    detail.innerHTML =
+      '<div class="lead-detail-content">'
+        +'<div class="lead-detail-head"><span class="lead-detail-head-num">'+r.num+'</span>'+r.label+' ｜ '+r.role+'</div>'
+        +'<div class="lead-detail-sec"><div class="lead-detail-title">担当者（最大'+r.max+'名）</div>'
+          +'<div class="lead-person-inputs">'+personRows+'</div></div>'
+        +'<div class="lead-detail-sec"><div class="lead-detail-title">期待役割</div>'
+          +'<textarea class="lead-expect-input" data-idx="'+idx+'" placeholder="期待役割を記入"></textarea></div>'
+        +'<div class="lead-detail-sec"><div class="lead-detail-title">月別実施計画</div>'
+          +'<div class="lead-plans-container" id="lead-plans-'+idx+'"></div>'
+          +'<button class="lead-add-plan" onclick="addLeaderPlan(event,'+idx+')">＋ 月別計画追加</button></div>'
+        +'<button class="lead-save-btn" onclick="saveLeader(event,'+idx+')">✦ 保存する</button>'
+      +'</div>';
+    detailArea.appendChild(detail);
+  });
+}
+
+function toggleLeaderDetail(idx) {
+  const main = document.querySelector('.leaders-table .lead-main[data-idx="'+idx+'"]');
+  const panel = document.querySelector('.lead-detail-panel[data-idx="'+idx+'"]');
+  if (!main || !panel) return;
+  const isOpen = panel.classList.contains('active');
+  // 他を閉じる
+  document.querySelectorAll('.lead-detail-panel.active').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.leaders-table .lead-main.expanded').forEach(function(m){ m.classList.remove('expanded'); });
+  // 自分をトグル
+  if (!isOpen) {
+    main.classList.add('expanded');
+    panel.classList.add('active');
+  }
+}
+
+function updateLeaderDisplay(idx) {
+  // 担当者表示
+  const inputs = document.querySelectorAll('.lead-person-input[data-idx="'+idx+'"]');
+  const disp = document.querySelector('.lead-person-disp[data-idx="'+idx+'"]');
+  if (disp) {
+    disp.innerHTML = '';
+    inputs.forEach(function(inp){
+      if (inp.value.trim()) {
+        const s = document.createElement('span');
+        s.className = 'lead-person-tag';
+        s.textContent = inp.value.trim();
+        disp.appendChild(s);
+      }
+    });
+  }
+  // 最新実施計画表示
+  const container = document.getElementById('lead-plans-'+idx);
+  const planBox = document.querySelector('.lead-plan-box[data-idx="'+idx+'"]');
+  if (planBox) {
+    let has = false;
+    if (container) {
+      const items = container.querySelectorAll('.lead-plan-item');
+      if (items.length) {
+        const latest = items[items.length-1];
+        const month = latest.querySelector('.lead-plan-month-in').value;
+        const text = latest.querySelector('.lead-plan-text-in').value;
+        if (month || text) {
+          const t = text ? (text.length>30 ? text.slice(0,30)+'…' : text) : '';
+          planBox.innerHTML = '<span class="lead-plan-month">'+escH(month||'未定')+'</span>'+escH(t);
+          has = true;
+        }
+      }
+    }
+    if (!has) planBox.innerHTML = '<span class="lead-plan-empty">計画未設定</span>';
+  }
+}
+
+function addLeaderPlan(e, idx) {
+  if (e) e.stopPropagation();
+  const container = document.getElementById('lead-plans-'+idx);
+  if (!container) return;
+  const item = document.createElement('div');
+  item.className = 'lead-plan-item';
+  item.innerHTML =
+    '<input type="text" class="lead-plan-month-in" placeholder="" data-idx="'+idx+'" oninput="updateLeaderDisplay('+idx+')">'
+    +'<textarea class="lead-plan-text-in" placeholder="実施計画を記入" data-idx="'+idx+'" oninput="updateLeaderDisplay('+idx+')"></textarea>'
+    +'<button class="lead-plan-del" onclick="removeLeaderPlan(this,'+idx+')">✕</button>';
+  container.appendChild(item);
+  updateLeaderDisplay(idx);
+}
+
+function removeLeaderPlan(btn, idx) {
+  btn.parentElement.remove();
+  updateLeaderDisplay(idx);
+}
+
+function editLeaderPlan(idx) {
+  const panel = document.querySelector('.lead-detail-panel[data-idx="'+idx+'"]');
+  if (panel && !panel.classList.contains('active')) {
+    toggleLeaderDetail(idx);
+  }
+  const container = document.getElementById('lead-plans-'+idx);
+  if (container) {
+    const items = container.querySelectorAll('.lead-plan-item');
+    if (items.length) {
+      const ta = items[items.length-1].querySelector('.lead-plan-text-in');
+      setTimeout(function(){ ta.focus(); }, 250);
+    } else {
+      addLeaderPlan(null, idx);
+      setTimeout(function(){
+        const ta = container.querySelector('.lead-plan-text-in');
+        if (ta) ta.focus();
+      }, 100);
+    }
+  }
+}
+
+function collectLeader(idx) {
+  const persons = [];
+  document.querySelectorAll('.lead-person-input[data-idx="'+idx+'"]').forEach(function(inp){
+    if (inp.value.trim()) persons.push(inp.value.trim());
+  });
+  const expect = document.querySelector('.lead-expect-input[data-idx="'+idx+'"]');
+  const plans = [];
+  const container = document.getElementById('lead-plans-'+idx);
+  if (container) {
+    container.querySelectorAll('.lead-plan-item').forEach(function(item){
+      const month = item.querySelector('.lead-plan-month-in').value.trim();
+      const text = item.querySelector('.lead-plan-text-in').value.trim();
+      if (month || text) plans.push({ month: month, text: text });
+    });
+  }
+  return { persons: persons, expect: (expect ? expect.value.trim() : ''), plans: plans };
+}
+
+function saveLeader(e, idx) {
+  if (e) e.stopPropagation();
+  const r = leaderRoles[idx];
+  const d = collectLeader(idx);
+  const btn = e ? e.target : null;
+  if (btn) { btn.textContent = '送信中…'; btn.disabled = true; }
+  const data = {
+    記録種別: 'リーダー配置',
+    分類番号: r.num,
+    分類: r.label,
+    役割: r.role,
+    担当者: d.persons.join('・'),
+    期待役割: d.expect,
+    月別実施計画: JSON.stringify(d.plans)
+  };
+  const payload = Object.assign({}, data, { _token: WRITE_TOKEN });
+  fetch(GAS_URL, {
+    method: 'POST', mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(payload)
+  })
+  .then(function(){
+    // 保存後にサーバから再取得して全員反映を確認
+    setTimeout(function(){
+      loadLeaders(function(){
+        showToast('✓ 「'+r.role+'」を保存しました');
+        if (btn) { btn.textContent = '✦ 保存する'; btn.disabled = false; }
+      });
+    }, 1500);
+  })
+  .catch(function(){
+    showToast('⚠ 送信に失敗しました。再度お試しください');
+    if (btn) { btn.textContent = '✦ 保存する'; btn.disabled = false; }
+  });
+}
+
+function loadLeaders(cb) {
+  fetch(GAS_URL + '?action=getLeaders', { method: 'GET' })
+  .then(function(r){ return r.json(); })
+  .then(function(json){
+    if (json.status === 'ok') {
+      leadersData = {};
+      (json.leaders || []).forEach(function(row){
+        const key = String(row['役割']||row.role||'').trim();
+        if (key) leadersData[key] = row;
+      });
+      applyLeadersData();
+    }
+    if (cb) cb();
+  })
+  .catch(function(){ if (cb) cb(); });
+}
+
+function applyLeadersData() {
+  leaderRoles.forEach(function(r, idx){
+    const row = leadersData[r.role];
+    if (!row) { updateLeaderDisplay(idx); return; }
+    // 担当者を復元
+    const persons = String(row['担当者']||row.persons||'').split(/[・,、]+/).filter(function(x){return x.trim();});
+    const inputs = document.querySelectorAll('.lead-person-input[data-idx="'+idx+'"]');
+    persons.forEach(function(p, i){ if (inputs[i]) inputs[i].value = p.trim(); });
+    // 期待役割を復元
+    const expect = document.querySelector('.lead-expect-input[data-idx="'+idx+'"]');
+    if (expect) expect.value = row['期待役割']||row.expect||'';
+    // 月別計画を復元
+    const container = document.getElementById('lead-plans-'+idx);
+    if (container) {
+      container.innerHTML = '';
+      let plans = [];
+      try { plans = JSON.parse(row['月別実施計画']||row.plans||'[]'); } catch(e) { plans = []; }
+      plans.forEach(function(pl){
+        const item = document.createElement('div');
+        item.className = 'lead-plan-item';
+        item.innerHTML =
+          '<input type="text" class="lead-plan-month-in" placeholder="" value="'+escAttr(pl.month||'')+'" data-idx="'+idx+'" oninput="updateLeaderDisplay('+idx+')">'
+          +'<textarea class="lead-plan-text-in" placeholder="実施計画を記入" data-idx="'+idx+'" oninput="updateLeaderDisplay('+idx+')">'+escH(pl.text||'')+'</textarea>'
+          +'<button class="lead-plan-del" onclick="removeLeaderPlan(this,'+idx+')">✕</button>';
+        container.appendChild(item);
+      });
+    }
+    updateLeaderDisplay(idx);
+  });
+}
+
+function escAttr(s){ return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+/* ===LEADERS_JS_INSERT=== */
+
 </script>
 </body>
 </html>
