@@ -576,6 +576,22 @@ window.addEventListener('load', function () {
   .my-new { color: var(--ink); }
 
 /* ===LEADERS_CSS_INSERT=== */
+
+  /* ===== おうちの人からの応援・コメント ===== */
+  .pm-wrap { margin: 0 0 16px; }
+  .pm-card { border: 1.5px solid var(--gold); background: linear-gradient(180deg, var(--gold-pale), #fffdf5); border-radius: var(--radius-md); padding: 12px 14px; box-shadow: var(--shadow-sm); }
+  .pm-card.is-new { animation: hkAlertIn .45s cubic-bezier(.22,1.4,.36,1) both; }
+  .pm-head { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; }
+  .pm-ic { font-size: 16px; }
+  .pm-title { font-size: 13px; font-weight: 700; color: #8a6200; letter-spacing: .04em; }
+  .pm-new { margin-left: auto; font-size: 10px; font-weight: 700; color: #fff; background: var(--gold); padding: 2px 8px; border-radius: 999px; letter-spacing: .06em; }
+  .pm-cheers { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+  .pm-cheers:empty { display: none; }
+  .pm-chip { display: inline-flex; align-items: center; gap: 5px; background: #fff; border: 1px solid var(--border); border-radius: 999px; padding: 4px 11px; font-size: 12px; color: var(--ink-soft); }
+  .pm-chip b { color: var(--primary); font-weight: 700; }
+  .pm-cm { background: #fff; border-radius: 8px; padding: 7px 10px; margin-top: 5px; font-size: 13px; color: var(--ink-soft); line-height: 1.6; word-break: break-word; }
+  .pm-cm b { color: var(--primary); }
+  .pm-cm .pm-cm-date { font-size: 10.5px; color: var(--ink-muted); margin-left: 6px; }
 </style>
 </head>
 <body>
@@ -648,6 +664,14 @@ window.addEventListener('load', function () {
         <div class="my-notice-body" id="my-notice-body" style="display:none;"></div>
       </div>
 
+      <!-- おうちの人からの応援・コメント（親版からの受信） -->
+      <div class="pm-wrap" id="pm-wrap" style="display:none;">
+        <div class="pm-card" id="pm-card">
+          <div class="pm-head"><span class="pm-ic">💛</span><span class="pm-title">おうちの人から</span><span class="pm-new" id="pm-new" style="display:none;">新着</span></div>
+          <div class="pm-cheers" id="pm-cheers"></div>
+          <div id="pm-comments"></div>
+        </div>
+      </div>
       <!-- Q1 -->
       <div class="diary-q">
         <div class="diary-q-label">Q1　今日のコンディションは？</div>
@@ -2761,6 +2785,67 @@ function hkSwitchPane(p) {
 }
 
 /* ===LEADERS_JS_INSERT=== */
+</script>
+<script>
+// ===== おうちの人からの応援・コメントを表示（読み取り専用）=====
+(function () {
+  var LS_SEEN = 'marc_oya_seen';
+  function $(id){ return document.getElementById(id); }
+  function escH(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function lsGet(k){ try{return +(localStorage.getItem(k)||0);}catch(e){return 0;} }
+  function lsSet(k,v){ try{localStorage.setItem(k,String(v));}catch(e){} }
+  var CHEER = { nice:'👍 いいね', ganbare:'💪 がんばれ', sugoi:'👏 すごい' };
+  function childName(){
+    var el = document.getElementById('diary-name');
+    var v = (el && el.value || '').trim().replace(/[\u3000\s]+/g,'');
+    if (!v && typeof marc !== 'undefined') v = (marc.name || '');
+    return v;
+  }
+  function fmt(ms){
+    if(!ms) return '';
+    var d = new Date(ms);
+    var dow = ['日','月','火','水','木','金','土'][d.getDay()];
+    return (d.getMonth()+1) + '/' + d.getDate() + '(' + dow + ')';
+  }
+  function render(j){
+    var wrap = $('pm-wrap'); if(!wrap) return;
+    var cheers = (j && j.cheers) || [];
+    var comments = (j && j.comments) || [];
+    if (!cheers.length && !comments.length){ wrap.style.display='none'; return; }
+    $('pm-cheers').innerHTML = cheers.map(function(c){
+      return '<span class="pm-chip">' + escH(c.from||'おうちの人') + ' <b>' + (CHEER[c.type]||'応援') + '</b></span>';
+    }).join('');
+    $('pm-comments').innerHTML = comments.map(function(c){
+      return '<div class="pm-cm"><b>' + escH(c.from||'おうちの人') + '</b>：' + escH(c.text) +
+             '<span class="pm-cm-date">' + fmt(c.ms) + '</span></div>';
+    }).join('');
+    var maxMs = 0;
+    cheers.concat(comments).forEach(function(x){ if(x.ms>maxMs) maxMs=x.ms; });
+    var seen = lsGet(LS_SEEN);
+    if (maxMs > seen){ $('pm-new').style.display='inline-block'; $('pm-card').classList.add('is-new'); lsSet(LS_SEEN, maxMs); }
+    else { $('pm-new').style.display='none'; $('pm-card').classList.remove('is-new'); }
+    wrap.style.display='block';
+  }
+  var lastName = '';
+  function loadParentMsgs(force){
+    var name = childName();
+    if (!name || name.length < 2){ var w=$('pm-wrap'); if(w) w.style.display='none'; return; }
+    if (name === lastName && !force) return;
+    lastName = name;
+    fetch(GAS_URL + '?action=getParentMessages&name=' + encodeURIComponent(name), { method:'GET' })
+      .then(function(r){ return r.json(); })
+      .then(function(j){ if(j && j.status==='ok') render(j); })
+      .catch(function(){});
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    var okBtn = document.querySelector('.diary-name-ok');
+    if (okBtn) okBtn.addEventListener('click', function(){ setTimeout(function(){ loadParentMsgs(true); }, 60); });
+    var inp = document.getElementById('diary-name');
+    if (inp) inp.addEventListener('change', function(){ loadParentMsgs(true); });
+    setTimeout(function(){ loadParentMsgs(false); }, 900);
+    setInterval(function(){ loadParentMsgs(true); }, 60000);
+  });
+})();
 </script>
 </body>
 </html>
