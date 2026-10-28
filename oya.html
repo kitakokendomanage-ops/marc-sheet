@@ -280,7 +280,7 @@ function showError(title,msg){
 // ====== 読み込み ======
 function load(){
   if (!CODE){ showError('ページを開けませんでした','配布された<b>QRコード</b>から開いてください。'); return; }
-  jsonp(GAS_URL + '?action=getChildDiary&c=' + encodeURIComponent(CODE))
+  jsonp(GAS_URL + '?action=oyaView&c=' + encodeURIComponent(CODE) + '&_=' + Date.now())
     .then(function(j){
       if (!j || j.status!=='ok'){ showError('コードを確認できません', (j&&j.message?esc(j.message):'配布されたQRコードをご確認ください。')); return; }
       render(j);
