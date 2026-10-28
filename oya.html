@@ -206,6 +206,20 @@ function getCode(){
 }
 const CODE = getCode();
 
+// ====== JSONP（GASをクロスオリジンで確実に読む。fetchのCORS問題を回避）======
+function jsonp(url){
+  return new Promise(function(resolve, reject){
+    var cb = '__oya_cb_' + Date.now() + '_' + Math.floor(Math.random()*100000);
+    var s = document.createElement('script');
+    var timer = setTimeout(function(){ cleanup(); reject(new Error('timeout')); }, 15000);
+    function cleanup(){ clearTimeout(timer); try{ delete window[cb]; }catch(e){ window[cb]=undefined; } if(s.parentNode) s.parentNode.removeChild(s); }
+    window[cb] = function(data){ cleanup(); resolve(data); };
+    s.onerror = function(){ cleanup(); reject(new Error('script error')); };
+    s.src = url + (url.indexOf('?')>=0?'&':'?') + 'callback=' + cb;
+    document.body.appendChild(s);
+  });
+}
+
 // ====== 波グラフ描画（コンディション=q1 / 充実度=q3）======
 function drawWave(wave){
   const pts = wave.filter(function(d){ return d && (d.q1!=null || d.q3!=null); });
@@ -266,8 +280,7 @@ function showError(title,msg){
 // ====== 読み込み ======
 function load(){
   if (!CODE){ showError('ページを開けませんでした','配布された<b>QRコード</b>から開いてください。'); return; }
-  fetch(GAS_URL + '?action=getChildDiary&c=' + encodeURIComponent(CODE), { method:'GET' })
-    .then(function(r){ return r.json(); })
+  jsonp(GAS_URL + '?action=getChildDiary&c=' + encodeURIComponent(CODE))
     .then(function(j){
       if (!j || j.status!=='ok'){ showError('コードを確認できません', (j&&j.message?esc(j.message):'配布されたQRコードをご確認ください。')); return; }
       render(j);
