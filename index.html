@@ -2794,6 +2794,18 @@ function hkSwitchPane(p) {
   function escH(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
   function lsGet(k){ try{return +(localStorage.getItem(k)||0);}catch(e){return 0;} }
   function lsSet(k,v){ try{localStorage.setItem(k,String(v));}catch(e){} }
+  function jsonp(url){
+    return new Promise(function(resolve, reject){
+      var cb = '__pm_cb_' + Date.now() + '_' + Math.floor(Math.random()*100000);
+      var s = document.createElement('script');
+      var timer = setTimeout(function(){ cleanup(); reject(new Error('timeout')); }, 15000);
+      function cleanup(){ clearTimeout(timer); try{ delete window[cb]; }catch(e){ window[cb]=undefined; } if(s.parentNode) s.parentNode.removeChild(s); }
+      window[cb] = function(data){ cleanup(); resolve(data); };
+      s.onerror = function(){ cleanup(); reject(new Error('script error')); };
+      s.src = url + (url.indexOf('?')>=0?'&':'?') + 'callback=' + cb;
+      document.body.appendChild(s);
+    });
+  }
   var CHEER = { nice:'👍 いいね', ganbare:'💪 がんばれ', sugoi:'👏 すごい' };
   function childName(){
     var el = document.getElementById('diary-name');
@@ -2832,8 +2844,7 @@ function hkSwitchPane(p) {
     if (!name || name.length < 2){ var w=$('pm-wrap'); if(w) w.style.display='none'; return; }
     if (name === lastName && !force) return;
     lastName = name;
-    fetch(GAS_URL + '?action=getParentMessages&name=' + encodeURIComponent(name), { method:'GET' })
-      .then(function(r){ return r.json(); })
+    jsonp(GAS_URL + '?action=getParentMessages&name=' + encodeURIComponent(name))
       .then(function(j){ if(j && j.status==='ok') render(j); })
       .catch(function(){});
   }
