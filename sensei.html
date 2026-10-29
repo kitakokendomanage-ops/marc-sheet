@@ -34,6 +34,19 @@
   .sensei input{flex:1;min-width:0;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:16px;color:var(--ink)}
   .sensei input:focus{border-color:var(--primary);outline:none}
   .sensei button{flex-shrink:0;min-height:38px;padding:0 14px;border:none;border-radius:var(--radius-sm);background:var(--primary);color:#fff;font-size:13px;font-weight:700;cursor:pointer}
+  .sensei-note{font-size:10.5px;color:var(--ink-muted);margin:-8px 2px 12px 2px;padding-left:2px;line-height:1.5}
+
+  /* 気になる部員 */
+  .alerts-card{background:linear-gradient(180deg,#fff9e9,#fffdf6);border:1.5px solid var(--gold);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);padding:12px 14px;margin-bottom:14px}
+  .alerts-h{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:#8a6200;margin-bottom:6px}
+  .alerts-cnt{margin-left:auto;font-size:11px;font-weight:700;color:#8a6200;background:#fff;border:1px solid var(--gold);border-radius:999px;padding:2px 9px}
+  .alert-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:9px 6px;border-radius:8px;cursor:pointer;transition:background .15s}
+  .alert-row:hover{background:#fff6dd}
+  .alert-row+.alert-row{border-top:1px solid rgba(184,150,12,.18)}
+  .a-name{font-size:14px;font-weight:800;color:var(--primary)}
+  .a-tags{display:flex;gap:5px;flex-wrap:wrap;margin-left:auto}
+  .a-tag{font-size:11px;font-weight:700;color:#8a6200;background:#fff;border:1px solid var(--gold);border-radius:999px;padding:2px 9px;white-space:nowrap}
+  .alerts-ok{font-size:12px;color:var(--ink-soft);background:var(--surface-2);border:1px solid var(--border-soft);border-radius:var(--radius-md);padding:12px 14px;margin-bottom:14px;text-align:center}
   .sensei-who{display:flex;align-items:center;gap:8px;background:var(--bg-warm);border:1px solid var(--border-soft);border-radius:var(--radius-sm);padding:7px 12px;margin-bottom:12px;font-size:13px;font-weight:700;color:var(--ink)}
   .sensei-who .lbl{font-size:11px;font-weight:700;color:var(--ink-muted)}
   .sensei-who button{margin-left:auto;min-height:32px;padding:0 12px;border:1.5px solid var(--border);border-radius:999px;background:var(--surface);color:var(--ink-soft);font-size:12px;font-weight:600;cursor:pointer}
@@ -131,15 +144,21 @@
       </div>
 
       <!-- 先生の名前（いいね・コメントに使う） -->
-      <div class="sensei" id="sensei-input">
-        <span class="sensei-lbl">先生のお名前</span>
-        <input type="text" id="sensei-name" placeholder="例：保﨑" maxlength="20" onkeydown="if(event.key==='Enter'){confirmSensei();}">
-        <button type="button" onclick="confirmSensei()">決定</button>
+      <div id="sensei-input">
+        <div class="sensei">
+          <span class="sensei-lbl">先生のお名前</span>
+          <input type="text" id="sensei-name" placeholder="苗字" maxlength="20" onkeydown="if(event.key==='Enter'){confirmSensei();}">
+          <button type="button" onclick="confirmSensei()">決定</button>
+        </div>
+        <div class="sensei-note">最初に一度だけ入れればOK。次回からは自動で表示されます（この端末に保存）。</div>
       </div>
       <div class="sensei-who hidden" id="sensei-who">
         <span class="lbl">先生</span><span id="sensei-who-name"></span>
         <button type="button" onclick="editSensei()">変更</button>
       </div>
+
+      <!-- 気になる部員（自動ピックアップ） -->
+      <div id="alerts"></div>
 
       <div class="hk-wrap">
         <div class="hk-head">
@@ -211,7 +230,7 @@ function editSensei(){ $('sensei-input').classList.remove('hidden'); $('sensei-w
 function needName(){ showToast('⚠ 先に先生のお名前を入れてください'); editSensei(); window.scrollTo(0,0); }
 
 // ===== 部員の一言（既存の仲間の一言を流用）=====
-const HK_TYPES=[{k:'nice',icon:'👍',label:'ナイス'},{k:'wakaru',icon:'🤝',label:'わかる'},{k:'sanko',icon:'💡',label:'参考になる'}];
+const HK_TYPES=[{k:'nice',icon:'👍',label:'ナイス'},{k:'wakaru',icon:'🤝',label:'わかる'},{k:'sanko',icon:'💡',label:'いい気づき'}];
 const HK_CM_MAX=30;
 let hkItems=[], hkOpenNames=null, hkOpenPicker=null, hkCommentFor=null, hkDisplayNames={};
 function hkDn(n){ return hkDisplayNames[n]||n; }
@@ -294,18 +313,38 @@ function hkReact(i,k){
     .catch(function(){ showToast('⚠ 通信に失敗しました。もう一度押してください'); });
 }
 
+// ===== 気になる部員 =====
+let alertsData=[];
+function loadAlerts(){
+  fetch(GAS_URL+'?action=teacherAlerts',{method:'GET'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){ if(!d||d.status!=='ok'){ $('alerts').innerHTML=''; return; } renderAlerts(d.alerts||[]); })
+    .catch(function(){ $('alerts').innerHTML=''; });
+}
+function renderAlerts(list){
+  alertsData=list||[];
+  var box=$('alerts');
+  if(!alertsData.length){ box.innerHTML='<div class="alerts-ok">👍 いまは特に気になる部員はいません</div>'; return; }
+  box.innerHTML='<div class="alerts-card"><div class="alerts-h">⚠ 気になる部員<span class="alerts-cnt">'+alertsData.length+'名</span></div>'
+    +alertsData.map(function(a,i){
+      var tags=(a.reasons||[]).map(function(t){ return '<span class="a-tag">'+escH(t)+'</span>'; }).join('');
+      return '<div class="alert-row" onclick="openAlert('+i+')"><span class="a-name">'+escH(a.display||a.name)+' ▸</span><span class="a-tags">'+tags+'</span></div>';
+    }).join('')+'</div>';
+}
+function openAlert(i){ var a=alertsData[i]; if(a) openGraphByName(a.name, a.display); }
+
 // ===== グラフ詳細 =====
 let curName='', curDays=31;
-function openGraph(i){
-  const it=hkItems[i]; if(!it) return;
-  curName=it.name; curDays=31;
-  $('d-name').textContent=hkDn(it.name);
+function openGraphByName(name, display){
+  curName=name; curDays=31;
+  $('d-name').textContent=display||name;
   Array.prototype.forEach.call($('period').children,function(b){ b.classList.toggle('on', b.getAttribute('data-days')==='31'); });
   $('view-feed').classList.add('hidden'); $('view-detail').classList.remove('hidden');
   window.scrollTo(0,0);
   loadGraph();
 }
-function toFeed(){ $('view-detail').classList.add('hidden'); $('view-feed').classList.remove('hidden'); window.scrollTo(0,0); loadFeed(); }
+function openGraph(i){ const it=hkItems[i]; if(!it) return; openGraphByName(it.name, hkDn(it.name)); }
+function toFeed(){ $('view-detail').classList.add('hidden'); $('view-feed').classList.remove('hidden'); window.scrollTo(0,0); loadFeed(); loadAlerts(); }
 function setPeriod(days,btn){ curDays=days; Array.prototype.forEach.call($('period').children,function(b){ b.classList.remove('on'); }); btn.classList.add('on'); loadGraph(); }
 
 function loadGraph(){
@@ -367,6 +406,7 @@ function waveSvg(wave){
 document.addEventListener('DOMContentLoaded', function(){
   refreshSensei();
   loadFeed();
+  loadAlerts();
 });
 </script>
 </body>
