@@ -27,6 +27,14 @@
   .header-title{font-family:'Noto Serif JP',serif;font-size:20px;font-weight:900;color:var(--ink);letter-spacing:.04em;margin-top:3px}
   .header-title span{color:var(--primary)}
   .header-sub{font-size:11px;color:var(--ink-muted);margin-top:3px}
+  /* ===== 専用AI（NotebookLM）リンク ===== */
+  .ai-link{display:flex;align-items:center;gap:13px;background:linear-gradient(120deg,#1a3a6b 0%,#2a5298 60%,#34608f 100%);color:#fff;border-radius:var(--radius-lg);padding:14px 18px;margin-top:14px;text-decoration:none;box-shadow:0 4px 18px rgba(26,58,107,0.28),0 0 0 1px rgba(212,173,26,0.35) inset;transition:all .25s ease}
+  .ai-link:hover{filter:brightness(1.06);transform:translateY(-1px);box-shadow:0 8px 24px rgba(26,58,107,0.35),0 0 0 1px rgba(212,173,26,0.55) inset}
+  .ai-link-icon{font-size:24px;flex-shrink:0;filter:drop-shadow(0 0 5px rgba(212,173,26,0.8))}
+  .ai-link-body{flex:1}
+  .ai-link-title{font-size:15px;font-weight:700;letter-spacing:.04em}
+  .ai-link-sub{font-size:11px;color:rgba(255,255,255,0.8);margin-top:2px}
+  .ai-link-arrow{font-size:20px;color:rgba(255,255,255,0.75);flex-shrink:0}
 
   /* 先生の名前（いいね・コメントに使う） */
   .sensei{display:flex;align-items:center;gap:8px;background:var(--bg-warm);border:1px solid var(--border-soft);border-radius:var(--radius-sm);padding:8px 12px;margin-bottom:12px}
@@ -356,6 +364,16 @@
         <div class="hk-hint">👉 <b>名前をタップ</b>すると、その部員の調子グラフ（コンディション・負荷・充実度）が開きます。いいね・コメントは各一言のすぐ下から送れます。</div>
         <div class="hk-list" id="hk-list"><div class="hk-empty">読み込み中…</div></div>
       </div>
+
+      <!-- 専用AI（NotebookLM）：押すと別タブでNotebookLMを開く -->
+      <a href="https://notebooklm.google.com/" target="_blank" rel="noopener" class="ai-link">
+        <span class="ai-link-icon">✨</span>
+        <div class="ai-link-body">
+          <div class="ai-link-title">専用AIに相談する</div>
+          <div class="ai-link-sub">NotebookLM｜稽古や課題について質問できます</div>
+        </div>
+        <span class="ai-link-arrow">›</span>
+      </a>
     </div>
 
     <!-- ===== グラフ詳細 ===== -->
