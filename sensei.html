@@ -130,6 +130,193 @@
 
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;padding:11px 22px;border-radius:999px;font-size:13px;box-shadow:var(--shadow-md);transition:transform .3s;z-index:999;white-space:nowrap}
   .toast.show{transform:translateX(-50%) translateY(0)}
+
+  /* ===== 詳細分析（公開版より移植）===== */
+  .da-card { margin-top: 0; padding: 14px 16px; border-radius: var(--radius-md); background: #F4F7FC; border: 1px solid rgba(26,58,107,0.15); color: var(--ink-soft); font-size: 13px; line-height: 1.7; }
+  .da-head { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--primary); font-size: 14px; margin-bottom: 4px; }
+  .da-head button { margin-left: auto; min-height: 30px !important; padding: 0 10px; border: 1px solid rgba(26,58,107,0.3); border-radius: 999px; background: var(--surface); color: var(--primary); font-family: inherit; font-size: 12px; cursor: pointer; }
+  .da-meta { font-size: 12px; color: var(--ink-muted); margin-bottom: 8px; }
+  .da-sec { margin-top: 10px; }
+  .da-sec-title { font-size: 12px; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
+  .da-avg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .da-avg div { background: var(--surface); border-radius: 10px; padding: 6px 4px; text-align: center; font-size: 11px; }
+  .da-avg b { display: block; font-size: 18px; color: var(--primary); line-height: 1.3; }
+  .da-avg small { display: block; font-size: 11px; color: var(--ink-muted); }
+  .da-row { background: var(--surface); border-radius: 10px; padding: 6px 10px; margin-bottom: 4px; }
+  .da-row b { color: var(--ink-soft); }
+  .da-note { font-size: 11px; color: var(--ink-muted); margin-top: 2px; }
+  .da-empty { background: var(--surface); border-radius: 12px; padding: 12px; margin-top: 6px; font-size: 13px; color: var(--ink-soft); font-weight: 700; }
+  .da-empty-s { font-size: 11.5px; font-weight: 400; color: var(--ink-muted); margin-top: 2px; }
+  .da-empty-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .da-empty-btns button { min-height: 36px !important; padding: 0 12px; border: 1.5px solid var(--primary); border-radius: 999px; background: var(--surface); color: var(--primary); font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+  .da-bar-block { background: var(--surface); border-radius: 10px; padding: 8px 10px 6px; margin-bottom: 6px; }
+  .da-bar-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; font-size: 12px; }
+  .da-bar-head b { color: var(--ink-soft); font-size: 13px; }
+  .da-bar-avg { color: var(--primary); font-weight: 700; }
+  .da-bar-trend { color: var(--ink-muted); font-size: 11px; }
+  .da-bars { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 4px; }
+  .da-bar-col { display: flex; flex-direction: column; align-items: center; }
+  .da-bar-n { font-size: 10.5px; color: var(--ink-soft); height: 15px; line-height: 15px; }
+  .da-bar-track { width: 100%; max-width: 34px; height: 56px; display: flex; align-items: flex-end; border-bottom: 1px solid rgba(26,58,107,0.25); }
+  .da-bar { width: 100%; background: var(--primary); border-radius: 4px 4px 0 0; }
+  .da-bar-x { font-size: 11px; color: var(--ink-muted); margin-top: 2px; }
+  .da-bar-ends { display: flex; justify-content: space-between; font-size: 10px; color: var(--ink-muted); margin-top: 1px; }
+  .da-tbl { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--surface); border-radius: 10px; overflow: hidden; font-size: 12px; }
+  .da-tbl th, .da-tbl td { padding: 6px 8px; text-align: center; border-bottom: 1px solid rgba(26,58,107,0.08); }
+  .da-tbl thead th { font-size: 11px; color: var(--ink-muted); font-weight: 500; white-space: nowrap; padding: 6px 4px; }
+  .da-tbl tbody th { text-align: left; font-weight: 700; color: var(--ink-soft); }
+  .da-tbl td { font-weight: 700; color: var(--primary); font-size: 14px; }
+  .da-tbl tr:last-child th, .da-tbl tr:last-child td { border-bottom: none; }
+  .da-q5 { display: grid; grid-template-columns: 1fr; gap: 4px; }
+  .da-q5 div { display: flex; justify-content: space-between; gap: 6px; background: var(--surface); border-radius: 8px; padding: 5px 9px; font-size: 12px; }
+  .da-q5 b { color: var(--primary); white-space: nowrap; }
+  .da-rx { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .da-rx div { background: var(--surface); border-radius: 10px; padding: 6px 4px; text-align: center; }
+  .da-rx-icon { font-size: 16px; }
+  .da-rx b { display: block; font-size: 18px; color: var(--primary); line-height: 1.2; }
+  .da-rx small { display: block; font-size: 11px; color: var(--ink-muted); }
+  .da-sub-title { font-size: 12px; font-weight: 700; color: var(--ink-soft); margin: 8px 0 4px; }
+  .da-cm { background: var(--surface); border-radius: 10px; padding: 6px 10px; margin-bottom: 4px; }
+  .da-cm-text { color: var(--ink-soft); }
+  .da-cm-meta { font-size: 11px; color: var(--ink-muted); }
+  .da-hbars { display: flex; flex-direction: column; gap: 8px; background: var(--surface); border-radius: 10px; padding: 10px; }
+  .da-hbar-label { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--ink-soft); margin-bottom: 3px; }
+  .da-hbar-label b { color: var(--primary); white-space: nowrap; }
+  .da-hbar-track { flex: 1; height: 12px; background: rgba(26,58,107,0.06); border-radius: 0 4px 4px 0; overflow: hidden; }
+  .da-hbar { height: 100%; background: var(--primary); border-radius: 0 4px 4px 0; }
+  .da-hbar.lo { background: #9fb3d6; }
+  .da-hbar-detail { font-size: 10.5px; color: var(--ink-muted); margin-top: 2px; }
+  .da-stack { display: flex; gap: 2px; height: 100%; }
+  .da-seg { height: 100%; min-width: 3px; }
+  .da-seg:last-child { border-radius: 0 4px 4px 0; }
+  .o-good { background: #2a5298; } .o-some { background: #6f9be0; } .o-bad { background: #d9822b; } .o-other { background: #98a3b6; }
+  .da-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11px; color: var(--ink-soft); margin-bottom: 6px; }
+  .da-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+  .da-tl { background: var(--surface); border-radius: 10px; padding: 10px; }
+  .da-tl-row { margin-bottom: 8px; }
+  .da-tl-head { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--ink-soft); margin-bottom: 3px; }
+  .da-tl-head b { color: var(--primary); white-space: nowrap; }
+  .da-tl-cells { display: grid; gap: 2px; }
+  .da-tl-cells i { display: block; height: 14px; border-radius: 3px; background: rgba(26,58,107,0.08); }
+  .da-tl-cells i.on { background: var(--primary); }
+  .da-tl-axis { display: flex; justify-content: space-between; font-size: 10px; color: var(--ink-muted); }
+  .da-gbar-block { background: var(--surface); border-radius: 10px; padding: 8px 10px; margin-bottom: 6px; }
+  .da-gbar-name { font-size: 12px; font-weight: 700; color: var(--ink-soft); margin-bottom: 4px; }
+  .da-gbar { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .da-gbar-lab { width: 3.6em; font-size: 11px; color: var(--ink-muted); white-space: nowrap; }
+  .da-gbar b { width: 2em; text-align: right; font-size: 13px; color: var(--primary); }
+  .da-goal { background: var(--surface); border-left: 4px solid var(--primary); border-radius: 0 10px 10px 0; padding: 8px 12px; margin: 14px 0 0; }
+  .da-goal-k { font-size: 11px; font-weight: 700; color: var(--ink-muted); }
+  .da-goal-t { font-size: 15px; font-weight: 700; color: var(--primary); line-height: 1.5; }
+  .da-goal-s { font-size: 10.5px; color: var(--ink-muted); }
+  .da-fc { background: var(--surface); border-radius: 10px; padding: 8px 10px; margin-bottom: 6px; }
+  .da-fc-name { color: var(--ink-soft); font-size: 13px; }
+  .da-seq i { height: 18px; }
+  .da-tl-cells i.o-good { background: #2a5298; } .da-tl-cells i.o-some { background: #6f9be0; }
+  .da-tl-cells i.o-bad { background: #d9822b; } .da-tl-cells i.o-other { background: #98a3b6; }
+  .da-tl-cells i.m, .da-legend i.m { background-image: repeating-linear-gradient(135deg, rgba(255,255,255,.85) 0 2px, transparent 2px 4px); }
+  .da-halves { margin-top: 6px; border-top: 1px dashed rgba(26,58,107,0.15); padding-top: 6px; }
+  .da-half { margin-bottom: 4px; }
+  .da-half-lab { font-size: 11.5px; font-weight: 700; color: var(--ink-soft); margin-bottom: 2px; }
+  .da-half-lab small { font-weight: 400; color: var(--ink-muted); margin-left: 6px; }
+  .da-wave-box { background: var(--surface); border-radius: 10px; padding: 8px 8px 6px; }
+  .da-wave { width: 100%; height: auto; display: block; }
+  #diary-analysis { max-width: 640px; margin-left: auto; margin-right: auto; }
+  .da-wave .w-grid { stroke: rgba(26,58,107,0.10); stroke-width: 1; }
+  .da-wave .w-ax { font-size: 8px; fill: var(--ink-muted); }
+  .da-wave .w-tick { stroke: rgba(26,58,107,0.35); stroke-width: 1; }
+  .da-wave .w-q3 { stroke: #2a5298; stroke-width: 2; }
+  .da-wave .w-q1 { stroke: #1f9e89; stroke-width: 2; stroke-dasharray: 4 3; }
+  .da-wave .w-q3-pt { fill: #2a5298; stroke: #fff; stroke-width: 1; }
+  .da-wave .w-q1-pt { fill: #1f9e89; stroke: #fff; stroke-width: 1; }
+  .da-wave .w-cur { stroke: rgba(26,58,107,0.4); stroke-width: 1; }
+  .da-wave .w-hit { fill: transparent; cursor: pointer; }
+  .da-legend i.w-q3-sw { background: #2a5298; height: 3px; width: 14px; vertical-align: 3px; }
+  .da-legend i.w-q1-sw { background: repeating-linear-gradient(90deg, #1f9e89 0 4px, transparent 4px 7px); height: 3px; width: 14px; vertical-align: 3px; }
+  .da-wave-info { font-size: 11.5px; color: var(--ink-soft); margin-top: 4px; min-height: 1.6em; }
+  .da-box { background: var(--surface); border-radius: 12px; padding: 10px 10px 8px; }
+  .da-box-title { font-size: 12px; font-weight: 700; color: var(--ink-soft); margin-bottom: 2px; }
+  .da-key { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 11.5px; color: var(--ink-soft); margin-top: 4px; }
+  .da-key i { display: inline-block; vertical-align: middle; margin-right: 5px; }
+  .da-key .k-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--primary); }
+  .da-key .k-dot.k-multi { background: #fff; border: 2px solid var(--primary); box-sizing: border-box; width: 11px; height: 11px; }
+  .da-key .k-dot { width: 11px; height: 11px; }
+  .da-key .k-line { width: 16px; height: 3px; border-radius: 2px; }
+  .da-key .k-q3 { background: #2a5298; }
+  .da-key .k-q1 { background: repeating-linear-gradient(90deg, #1f9e89 0 5px, transparent 5px 8px); }
+  .da-key .k-q2 { background: repeating-linear-gradient(90deg, #c8691c 0 2px, transparent 2px 4px); }
+  .da-wave .w-q2 { stroke: #c8691c; stroke-width: 2; stroke-dasharray: 1.5 2.5; stroke-linecap: round; }
+  .da-wave .w-q2-pt { fill: #c8691c; stroke: #fff; stroke-width: 1; }
+  .da-wave.hide-q1 .w-q1, .da-wave.hide-q1 .w-q1-pt, .da-wave.hide-q2 .w-q2, .da-wave.hide-q2 .w-q2-pt, .da-wave.hide-q3 .w-q3, .da-wave.hide-q3 .w-q3-pt { display: none; }
+  .da-key-btns button { display: inline-flex; align-items: center; min-height: 30px !important; padding: 0 10px; border: 1px solid rgba(26,58,107,0.25); border-radius: 999px; background: var(--surface); color: var(--ink-soft); font-family: inherit; font-size: 11.5px; cursor: pointer; }
+  .da-key-btns button[aria-pressed="false"] { opacity: .45; text-decoration: line-through; }
+  .da-wave .w-ax { font-size: 11px; }
+  .da-wave .w-date { font-size: 10.5px; fill: var(--ink-muted); }
+  .da-wave .w-grid.w-mid { stroke: rgba(26,58,107,0.22); }
+  .da-wave .w-q3 { stroke-width: 2.5; }
+  .da-theme { display: flex; flex-direction: column; margin: 0 0 8px; }
+  .da-theme-name { font-size: 18px; font-weight: 800; color: var(--primary); line-height: 1.3; }
+  .da-theme-sub { font-size: 11.5px; color: var(--ink-muted); }
+  .da-seq-chart { width: 100%; height: auto; display: block; margin-top: 4px; }
+  .da-seq-chart .s-lane { stroke: rgba(26,58,107,0.12); stroke-width: 1; }
+  .da-seq-chart .s-lane-o { stroke-dasharray: 2 3; }
+  .da-seq-chart .s-lab { font-size: 12.5px; font-weight: 700; fill: var(--ink-soft); }
+  .da-seq-chart .s-lab-o { font-weight: 400; fill: var(--ink-muted); font-size: 11px; }
+  .da-seq-chart .s-path { stroke: rgba(26,58,107,0.35); stroke-width: 1.5; }
+  .da-seq-chart .s-dot { fill: var(--primary); stroke: #fff; stroke-width: 1.5; }
+  .da-seq-chart .s-dot.s-multi { fill: #fff; stroke: var(--primary); stroke-width: 2; }
+  .da-seq-chart .s-dot.s-other { fill: #98a3b6; }
+  .da-seq-chart .s-dot.s-other.s-multi { fill: #fff; stroke: #98a3b6; }
+  .da-seq-chart .w-cur { stroke: rgba(26,58,107,0.4); stroke-width: 1; }
+  .da-seq-chart .w-hit { fill: transparent; cursor: pointer; }
+  .da-cmp { display: flex; align-items: stretch; gap: 8px; margin-top: 8px; }
+  .da-cmp-cell { flex: 1; background: var(--surface); border-radius: 12px; padding: 8px 10px; text-align: center; }
+  .da-cmp-k { font-size: 11.5px; font-weight: 700; color: var(--ink-soft); }
+  .da-cmp-v { font-size: 26px; font-weight: 800; color: var(--primary); line-height: 1.2; }
+  .da-cmp-v small { font-size: 12px; font-weight: 700; margin-left: 2px; }
+  .da-cmp-s { font-size: 10.5px; color: var(--ink-muted); }
+  .da-cmp-arrow { align-self: center; font-size: 18px; color: var(--ink-muted); }
+  .da-cmp-cap { font-size: 11px; color: var(--ink-muted); margin-top: 4px; text-align: center; }
+  .da-next { margin-top: 12px; background: var(--primary); color: #fff; border-radius: 12px; padding: 10px 14px; }
+  .da-next-k { font-size: 11px; font-weight: 700; opacity: .8; }
+  .da-next-q { font-size: 14px; font-weight: 700; line-height: 1.6; }
+  .da-next-s { font-size: 11px; opacity: .85; margin-top: 2px; }
+  .da-tag-lead { font-size: 13px; color: var(--ink-soft); margin: 2px 0 8px; }
+  .da-tag-lead b { color: var(--primary); }
+  .da-tag-key { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11px; color: var(--ink-soft); margin-bottom: 8px; }
+  .da-tag-key span { display: inline-flex; align-items: center; gap: 4px; }
+  .da-tag-key .da-sq { width: 16px; height: 16px; font-size: 10px; cursor: default; }
+  .da-tags { display: flex; flex-direction: column; gap: 8px; }
+  .da-tag-row { background: var(--surface); border-radius: 12px; padding: 10px 12px; }
+  .da-tag-head { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; }
+  .da-tag { display: inline-block; padding: 3px 11px; border-radius: 999px; background: rgba(26,58,107,0.09); color: var(--primary); font-size: 13px; font-weight: 700; line-height: 1.5; }
+  .da-tag.mine { background: var(--gold-pale); color: #7a5d00; }
+  .da-tag-n { font-size: 13px; font-weight: 800; color: var(--ink); }
+  .da-tag-run { font-size: 10.5px; font-weight: 700; color: var(--ink-muted); }
+  .da-tag-cells { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+  .da-sq { width: 26px; height: 26px; min-height: 0 !important; padding: 0; border: none; border-radius: 5px; display: inline-flex; align-items: center; justify-content: center; font-family: inherit; font-size: 13px; font-weight: 700; color: #fff; cursor: pointer; line-height: 1; }
+  .da-tag-cells.dense { gap: 3px; }
+  .da-tag-cells.dense .da-sq { width: 20px; height: 20px; font-size: 11px; border-radius: 4px; }
+  .da-sq.r-good { background: #1d4f9e; } .da-sq.r-some { background: #5a93e8; } .da-sq.r-bad { background: #c8620e; }
+  .da-sq.r-other { background: var(--surface); border: 1.5px dashed #9aa3b2; color: var(--ink-muted); }
+  .da-tag-sum { font-size: 11.5px; color: var(--ink-soft); margin-top: 6px; }
+  .da-tag-info { font-size: 11.5px; font-weight: 700; color: var(--primary); margin-top: 3px; min-height: 0; }
+  .da-sec-sub { font-size: 11px; font-weight: 500; color: var(--ink-muted); margin-left: 6px; }
+  .da-notes { display: flex; flex-direction: column; gap: 6px; }
+  .da-note-item { background: var(--surface); border-radius: 10px; padding: 8px 10px; }
+  .da-note-item.da-note-more { display: none; }
+  .da-notes.show-all .da-note-item.da-note-more { display: block; }
+  .da-note-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin-bottom: 3px; }
+  .da-note-date { font-size: 11.5px; font-weight: 700; color: var(--primary); margin-right: 2px; }
+  .da-note-tag { font-size: 10.5px; color: var(--ink-soft); background: rgba(26,58,107,0.07); border-radius: 999px; padding: 1px 8px; }
+  .da-note-text { font-size: 13px; color: var(--ink); line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
+  .da-notes-btn { width: 100%; margin-top: 6px; min-height: 38px !important; border: 1.5px solid rgba(26,58,107,0.3); border-radius: 999px; background: var(--surface); color: var(--primary); font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+  .da-sumi { background: linear-gradient(180deg, #ffffff, #f7faff); border: 1.5px solid rgba(26,58,107,0.2); border-radius: var(--radius-md); padding: 12px 14px; margin: 6px 0 12px; }
+  .da-sumi-k { font-size: 11px; font-weight: 700; color: var(--gold); letter-spacing: .08em; margin-bottom: 4px; }
+  .da-sumi-t { font-size: 14.5px; font-weight: 700; color: var(--primary); line-height: 1.75; }
+  .da-sumi-n { font-size: 10.5px; color: var(--ink-muted); margin-top: 6px; }
+  .da-ana-empty { padding: 18px 4px; text-align: center; font-size: 13px; color: var(--ink-soft); line-height: 1.8; }
+  .da-ana-empty button { margin-top: 8px; min-height: 40px !important; padding: 0 16px; border: 1.5px solid var(--primary); border-radius: 999px; background: var(--surface); color: var(--primary); font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -178,9 +365,9 @@
         <div class="d-top">
           <div class="d-name" id="d-name">—</div>
           <div class="period" id="period">
-            <button data-days="31" class="on" onclick="setPeriod(31,this)">1か月</button>
-            <button data-days="93" onclick="setPeriod(93,this)">3か月</button>
-            <button data-days="0" onclick="setPeriod(0,this)">全期間</button>
+            <button data-range="7" onclick="setPeriod(7,this)">1週間</button>
+            <button data-range="31" class="on" onclick="setPeriod(31,this)">1か月</button>
+            <button data-range="93" onclick="setPeriod(93,this)">3か月</button>
           </div>
         </div>
         <div id="d-body"><div class="d-spin"></div></div>
@@ -333,73 +520,261 @@ function renderAlerts(list){
 }
 function openAlert(i){ var a=alertsData[i]; if(a) openGraphByName(a.name, a.display); }
 
-// ===== グラフ詳細 =====
-let curName='', curDays=31;
+// ===== グラフ詳細（詳細分析）=====
+let curName='', curRange=31;
+const RANGE_LABEL={7:'1週間',31:'1か月',93:'3か月'};
 function openGraphByName(name, display){
-  curName=name; curDays=31;
+  curName=name; curRange=31;
   $('d-name').textContent=display||name;
-  Array.prototype.forEach.call($('period').children,function(b){ b.classList.toggle('on', b.getAttribute('data-days')==='31'); });
+  Array.prototype.forEach.call($('period').children,function(b){ b.classList.toggle('on', b.getAttribute('data-range')==='31'); });
   $('view-feed').classList.add('hidden'); $('view-detail').classList.remove('hidden');
   window.scrollTo(0,0);
-  loadGraph();
+  loadAnalyze();
 }
 function openGraph(i){ const it=hkItems[i]; if(!it) return; openGraphByName(it.name, hkDn(it.name)); }
 function toFeed(){ $('view-detail').classList.add('hidden'); $('view-feed').classList.remove('hidden'); window.scrollTo(0,0); loadFeed(); loadAlerts(); }
-function setPeriod(days,btn){ curDays=days; Array.prototype.forEach.call($('period').children,function(b){ b.classList.remove('on'); }); btn.classList.add('on'); loadGraph(); }
-
-function loadGraph(){
-  $('d-body').innerHTML='<div class="d-spin"></div>';
-  fetch(GAS_URL+'?action=teacherView&name='+encodeURIComponent(curName)+'&days='+curDays,{method:'GET'})
-    .then(function(r){ return r.json(); })
-    .then(function(d){ if(!d||d.status!=='ok'){ $('d-body').innerHTML='<div class="empty">データを取得できませんでした。</div>'; return; } renderGraph(d); })
-    .catch(function(){ $('d-body').innerHTML='<div class="empty">通信に失敗しました。もう一度お試しください。</div>'; });
+function setPeriod(range,btn){ curRange=range; Array.prototype.forEach.call($('period').children,function(b){ b.classList.remove('on'); }); btn.classList.add('on'); loadAnalyze(); }
+let daReq2=0;
+function loadAnalyze(){
+  var req=++daReq2;
+  $('d-body').innerHTML='<div class="da-card"><div class="d-spin"></div></div>';
+  fetch(GAS_URL+'?action=teacherAnalyze&name='+encodeURIComponent(curName)+'&rangeDays='+curRange+'&_='+Date.now(),{method:'GET'})
+    .then(function(r){ return r.text(); })
+    .then(function(t){ if(req!==daReq2) return; var j=JSON.parse(t); if(j.status!=='ok') throw 0; $('d-body').innerHTML='<div class="da-card">'+teacherRender(j)+'</div>'; })
+    .catch(function(){ if(req!==daReq2) return; $('d-body').innerHTML='<div class="da-card"><div class="da-meta">分析を読み込めませんでした。もう一度お試しください。</div></div>'; });
+}
+function teacherRender(d){
+  var rt = d.rangeFrom ? ('直近'+RANGE_LABEL[d.rangeDays]+'（'+daEsc(d.rangeFrom)+'〜'+daEsc(d.rangeTo)+'）') : ('直近'+(RANGE_LABEL[d.rangeDays]||''));
+  if(!d.days){ return '<div class="da-meta">'+rt+'</div><div class="da-empty"><div>この期間の記録はありません。</div></div>' + daNotes(d) + daPeers(d); }
+  var h='<div class="da-meta">'+rt+'・記録 <b>'+d.days+'回</b></div>';
+  if(d.days < d.minDays){ return h + daWave(d) + '<div class="da-meta">この期間の記録が'+d.minDays+'回たまると、テーマの分析も表示します。</div>' + daNotes(d) + daPeers(d); }
+  return h + daWave(d) + daFocus(d) + daHalves(d) + daNotes(d) + daPeers(d);
+}
+function daHalves(d){
+  if(!d.focus||!d.focus.length) return '';
+  var rows=d.focus.filter(function(f){return f.halves;});
+  if(!rows.length) return '';
+  var pct=function(t){ return t.n? Math.round((t.good+t.some)/t.n*100):0; };
+  return '<div class="da-sec"><div class="da-sec-title">前半 → 後半（うまくいった割合）</div>'+rows.map(function(f){
+    var a=pct(f.halves.first), b=pct(f.halves.second);
+    var col=b>a?'#15803d':(b<a?'#c0392b':'var(--primary)'), arr=b>a?' ↗ 伸びている':(b<a?' ↘ 下がり気味':' → 横ばい');
+    return '<div class="da-row"><b>'+daEsc(daLabel(f.label))+'</b>　'+a+'% → <b style="color:'+col+'">'+b+'%</b>'+arr+'</div>';
+  }).join('')+'</div>';
 }
 
-function renderGraph(d){
-  var html='';
-  // 波
-  html+='<div class="card-h"><span class="ic">📈</span><span class="t">調子の波</span></div>';
-  var wave=(d.wave||[]).filter(function(x){return x&&(x.q1!=null||x.q2!=null||x.q3!=null);});
-  if(wave.length){
-    html+='<div class="wave-box">'+waveSvg(wave)+'</div>'
-      +'<div class="legend"><span><i class="s-cond"></i>コンディション</span><span><i class="s-load"></i>負荷</span><span><i class="s-fill"></i>充実度</span></div>';
-  } else { html+='<div class="empty">この期間の記録はありません。</div>'; }
-  // テーマ
-  if(d.theme&&d.theme.name){
-    html+='<div class="theme"><div class="theme-name">'+escH(d.theme.name)+'</div><div class="theme-sub">'
-      +(d.theme.count>1?('この期間でいちばん多く意識（'+d.theme.count+'回）'):'直近に意識していたこと')+'</div></div>';
+function daEsc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) { return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; });
+}
+function daLabel(s) { return String(s || '').replace(/^(マイ|その他):/, ''); } // マイテーマは名前だけ出す
+function daNum(v) { return (v == null) ? '—' : Number(v).toFixed(1); }
+
+// 仲間からの反応
+function daPeers(d) {
+  const p = d.peers;
+  if (!p) return '';
+  const rx = p.reactions || {};
+  const types = (typeof HK_TYPES !== 'undefined') ? HK_TYPES : [ { k: 'nice', icon: '👍', label: 'ナイス' }, { k: 'wakaru', icon: '🤝', label: 'わかる' }, { k: 'sanko', icon: '💡', label: '参考になる' } ];
+  const totalRx = types.reduce(function(a, t) { return a + (rx[t.k] || 0); }, 0);
+  let h = '<div class="da-sec"><div class="da-sec-title">' + (d.notes === undefined ? '③' : '④') + ' 仲間からの反応</div>';
+  if (!totalRx && !p.commentTotal) return h + '<div class="da-row">この範囲の反応はまだありません。</div></div>';
+  h += '<div class="da-rx">' + types.map(function(t) {
+    return '<div><span class="da-rx-icon">' + t.icon + '</span><b>' + (rx[t.k] || 0) + '</b><small>' + t.label + '</small></div>';
+  }).join('') + '</div>';
+  if (p.reactors && p.reactors.length) {
+    h += '<div class="da-sub-title">反応をくれた仲間</div>' + daHBars(p.reactors.map(function(r) { return { label: r.name, value: r.count }; }), '回');
   }
-  // 一言
-  html+='<div class="card-h"><span class="ic">💬</span><span class="t">最近の一言</span></div>';
-  var hk=d.hitokoto||[];
-  if(hk.length){
-    html+=hk.map(function(h){
-      var nums=[];
-      if(h.q1!=null)nums.push('調子<b>'+h.q1+'</b>');
-      if(h.q2!=null)nums.push('負荷<b>'+h.q2+'</b>');
-      if(h.q3!=null)nums.push('充実<b>'+h.q3+'</b>');
-      return '<div class="hk2"><div class="hk2-top"><span class="hk2-date">'+escH(h.date)+'</span>'
-        +(nums.length?'<span class="hk2-nums">'+nums.join('・')+'</span>':'')+'</div>'
-        +'<div class="hk2-text">'+escH(h.text)+'</div></div>';
-    }).join('');
-  } else { html+='<div class="empty">この期間の一言はありません。</div>'; }
-  $('d-body').innerHTML=html;
+  if (p.commentTotal) {
+    h += '<div class="da-sub-title">💬 コメント ' + p.commentTotal + '件</div>';
+    h += '<div class="da-row" style="font-size:11.5px;color:var(--ink-muted);">コメントの本文は、お子さん（本人）だけが見られます。先生の画面には表示しません。</div>';
+  }
+  return h + '</div>';
 }
 
-// 3本折れ線SVG（null はその点を飛ばす）
-function waveSvg(wave){
-  var dates=wave.map(function(d){return d.date||'';});
-  var cond=wave.map(function(d){return d.q1;}), load=wave.map(function(d){return d.q2;}), fill=wave.map(function(d){return d.q3;});
-  var W=440,H=150,padL=24,padR=12,padT=12,padB=24, iw=W-padL-padR, ih=H-padT-padB, n=wave.length;
-  function x(i){return padL+(n<=1?iw/2:iw*i/(n-1));}
-  function y(v){return padT+ih*(5-v)/4;}
-  var el='';
-  [1,2,3,4,5].forEach(function(v){var yy=y(v).toFixed(1);el+='<line class="grid-l'+(v===3?' mid':'')+'" x1="'+padL+'" y1="'+yy+'" x2="'+(W-padR)+'" y2="'+yy+'"/>';el+='<text class="ax" x="'+(padL-6)+'" y="'+(+yy+3)+'" text-anchor="end">'+v+'</text>';});
-  function line(a,c){var d='',st=false;a.forEach(function(v,i){if(v==null)return;d+=(st?'L':'M')+x(i).toFixed(1)+' '+y(v).toFixed(1)+' ';st=true;});return d?'<path class="'+c+'" d="'+d.trim()+'"/>':'';}
-  function dots(a,c){return a.map(function(v,i){return v==null?'':'<circle class="'+c+'" cx="'+x(i).toFixed(1)+'" cy="'+y(v).toFixed(1)+'" r="3"/>';}).join('');}
-  el+=line(fill,'l-fill')+line(load,'l-load')+line(cond,'l-cond')+dots(fill,'pt-fill')+dots(load,'pt-load')+dots(cond,'pt-cond');
-  dates.forEach(function(dt,i){ if(n>8 && i%2===1 && i!==n-1) return; el+='<text class="date" x="'+x(i).toFixed(1)+'" y="'+(H-8)+'" text-anchor="middle">'+escH(dt)+'</text>'; });
-  return '<svg class="wave" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet">'+el+'</svg>';
+// 横棒グラフ（1系列）：items = [{label, value}]
+function daHBars(items, unit) {
+  const max = Math.max.apply(null, items.map(function(x) { return x.value; }).concat([1]));
+  return '<div class="da-hbars">' + items.map(function(x) {
+    const pct = x.value ? Math.max(3, Math.round(x.value / max * 100)) : 0;
+    return '<div class="da-hbar-row"><div class="da-hbar-label"><span>' + daEsc(x.label) + '</span><b>' + x.value + (unit || '') + '</b></div>'
+      + '<div class="da-hbar-track"><div class="da-hbar" style="width:' + pct + '%"></div></div></div>';
+  }).join('') + '</div>';
+}
+
+// Q5 の結果（1日を1つに決めたもの）の色
+const DA_OUTCOMES = [
+  { k: 'good',  label: 'うまくできた',       short: 'うまく',   cls: 'o-good' },
+  { k: 'some',  label: '少しうまくできた',   short: '少し',     cls: 'o-some' },
+  { k: 'bad',   label: 'うまくできなかった', short: 'できず',   cls: 'o-bad' },
+  { k: 'other', label: 'それ以外',           short: 'それ以外', cls: 'o-other' }
+];
+function daOutcomeCls(k) { const o = DA_OUTCOMES.find(function(x) { return x.k === k; }); return o ? o.cls : ''; }
+
+// 今のテーマ：この期間に剣道日記のQ4でいちばん多く選んだ項目（同じ日数なら最近選んだ方）
+function daGoal(d) {
+  if (!d.focus || !d.focus.length) return '';
+  return '<div class="da-goal"><div class="da-goal-k">🎯 今のテーマ</div><div class="da-goal-t">' + daEsc(daLabel(d.focus[0].label)) + '</div>'
+    + '<div class="da-goal-s">この期間にQ4でいちばん多く選んだ項目（' + d.focus[0].count + '日）</div></div>';
+}
+
+// ② 今のテーマの進み具合：そのテーマを選んだ日だけを古い順に、Q5の結果ごとの段に点で並べる
+//   段（上から）：うまくできた／少しうまくできた／うまくできなかった／それ以外。色ではなく「高さ」で結果を表す
+const DA_LANES = [
+  { k: 'good',  label: 'うまく' },
+  { k: 'some',  label: '少し' },
+  { k: 'bad',   label: 'できず' },
+  { k: 'other', label: 'その他' }
+];
+let daSeqData = null;
+// 意識したテーマ：テーマごとに1行。選んだ日を1マスずつ、その日のQ5の結果で色分けして日付順に並べる（ユニットチャート）
+// 小さい回数は割合ではなく「回数そのもの」を見せる。色だけに頼らず、マスの中に ◎○× の記号も入れる
+const DA_TAG_RES = {
+  good:  { label: 'うまくできた', mark: '◎' },
+  some:  { label: '少しうまくできた',   mark: '○' },
+  bad:   { label: 'うまくできなかった', mark: '×' },
+  other: { label: '試した・気づいた・変化なし', mark: '' } // Q5で上の3つ以外だけを選んだ日（新しいことを試した／気づいたことがあった／特に変化なし）
+};
+let daTagData = [];
+function daFocus(d) {
+  if (!d.focus || !d.focus.length) return '';
+  daTagData = d.focus;
+  const top = d.focus[0];
+  let h = '<div class="da-sec"><div class="da-sec-title">② 意識したテーマ</div>'
+    + '<div class="da-tag-lead">いちばん意識したのは「<b>' + daEsc(daLabel(top.label)) + '</b>」（記録' + d.days + '回のうち' + top.count + '回）</div>'
+    + '<div class="da-tag-key">' + ['good', 'some', 'bad', 'other'].map(function(k) {
+        return '<span><i class="da-sq r-' + k + '">' + DA_TAG_RES[k].mark + '</i>' + DA_TAG_RES[k].label + '</span>';
+      }).join('') + '</div><div class="da-tags">';
+  d.focus.forEach(function(f, ri) {
+    const seq = f.seq || [];
+    const cnt = { good: 0, some: 0, bad: 0, other: 0 };
+    seq.forEach(function(c) { cnt[c.c] = (cnt[c.c] || 0) + 1; });
+    const mine = /^マイ:/.test(f.label);
+    h += '<div class="da-tag-row">'
+      + '<div class="da-tag-head"><span class="da-tag' + (mine ? ' mine' : '') + '">' + (mine ? '★ ' : '') + daEsc(daLabel(f.label)) + '</span>'
+      + '<span class="da-tag-n">' + f.count + '回</span>'
+      + (f.run >= 2 ? '<span class="da-tag-run">最新まで' + f.run + '回続けて</span>' : '') + '</div>'
+      + '<div class="da-tag-cells' + (seq.length > 14 ? ' dense' : '') + '">' + seq.map(function(c, i) {
+          const res = DA_TAG_RES[c.c] || DA_TAG_RES.other;
+          return '<button type="button" class="da-sq r-' + c.c + '" aria-label="' + daEsc(c.d) + ' ' + res.label + '" onclick="daTagShow(' + ri + ',' + i + ')">' + res.mark + '</button>';
+        }).join('') + '</div>'
+      + '<div class="da-tag-sum">' + ['good', 'some', 'bad'].filter(function(k) { return cnt[k]; }).map(function(k) {
+          return DA_TAG_RES[k].mark + ' ' + DA_TAG_RES[k].label + ' ' + cnt[k];
+        }).join('　') + (cnt.other ? '　□ ' + DA_TAG_RES.other.label + ' ' + cnt.other : '') + '</div>'
+      + '<div class="da-tag-info" id="da-tag-info-' + ri + '"></div>'
+      + '</div>';
+  });
+  return h + '</div><div class="da-note">マスは選んだ日を古い順に並べたものです。押すとその日の結果が出ます</div></div>';
+}
+function daTagShow(ri, i) {
+  const f = daTagData[ri], c = f && (f.seq || [])[i];
+  const el = document.getElementById('da-tag-info-' + ri);
+  if (!c || !el) return;
+  el.textContent = c.d + '：' + (DA_TAG_RES[c.c] || DA_TAG_RES.other).label + (c.m ? '（ほかのテーマも選んだ日）' : '');
+}
+
+// ① 調子の波：記録した日ごとの充実度・コンディション・負荷（1〜5）。記録した日だけを詰めて並べる
+let daWaveData = null;
+function daWave(d) {
+  const w = d.wave;
+  if (!w || !w.days || !w.days.length) return '';
+  daWaveData = w.days;
+  const days = w.days, n = days.length;
+  const W = 300, H = 156, L = 20, R = 8, T = 10, B = 30;
+  const xs = function(i) { return n === 1 ? (L + (W - L - R) / 2) : L + i * (W - L - R) / (n - 1); };
+  const ys = function(v) { return T + (5 - v) * (H - T - B) / 4; };
+  const series = [ { k: 'q2', cls: 'w-q2' }, { k: 'q1', cls: 'w-q1' }, { k: 'q3', cls: 'w-q3' } ]; // 充実度を最前面に
+  const r = n <= 31 ? 3.2 : 2;
+  let svg = '<svg class="da-wave" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="日ごとの充実度・コンディション・負荷">';
+  [1, 2, 3, 4, 5].forEach(function(v) {
+    svg += '<line class="w-grid' + (v === 3 ? ' w-mid' : '') + '" x1="' + L + '" x2="' + (W - R) + '" y1="' + ys(v) + '" y2="' + ys(v) + '"/>'
+         + '<text class="w-ax" x="' + (L - 6) + '" y="' + (ys(v) + 3.5) + '" text-anchor="end">' + v + '</text>';
+  });
+  series.forEach(function(s) {
+    const pts = [];
+    days.forEach(function(x, i) { if (x[s.k]) pts.push([xs(i), ys(x[s.k])]); });
+    if (pts.length > 1) svg += '<polyline class="' + s.cls + '" fill="none" points="' + pts.map(function(p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' ') + '"/>';
+    pts.forEach(function(p) { svg += '<circle class="' + s.cls + '-pt" cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="' + r + '"/>'; });
+  });
+  svg += '<line id="da-wave-cur" class="w-cur" x1="0" x2="0" y1="' + T + '" y2="' + (H - B) + '" style="display:none"/>';
+  // 日付の目盛り（点の真下に置く）：最初・真ん中・最後
+  const ticks = n === 1 ? [0] : (n >= 5 ? [0, Math.floor((n - 1) / 2), n - 1] : [0, n - 1]);
+  ticks.forEach(function(i, j) {
+    const anchor = n === 1 ? 'middle' : (j === 0 ? 'start' : (i === n - 1 ? 'end' : 'middle'));
+    svg += '<line class="w-tick" x1="' + xs(i).toFixed(1) + '" x2="' + xs(i).toFixed(1) + '" y1="' + (H - B + 2) + '" y2="' + (H - B + 6) + '"/>'
+         + '<text class="w-date" x="' + (anchor === 'start' ? xs(i) - 4 : anchor === 'end' ? xs(i) + 4 : xs(i)).toFixed(1) + '" y="' + (H - B + 18) + '" text-anchor="' + anchor + '">' + daEsc(days[i].d) + '</text>';
+  });
+  const bw = n === 1 ? (W - L - R) : (W - L - R) / (n - 1);
+  days.forEach(function(x, i) {
+    svg += '<rect class="w-hit" x="' + (xs(i) - bw / 2).toFixed(1) + '" y="0" width="' + bw.toFixed(1) + '" height="' + H + '" onclick="daWaveShow(' + i + ')"/>';
+  });
+  svg += '</svg>';
+  const mid = Math.floor((n - 1) / 2);
+  const recN = days.filter(function(x) { return x.q1 || x.q2 || x.q3; }).length;
+  return '<div class="da-sec"><div class="da-sec-title">① 調子の波</div>'
+    + '<div class="da-box">'
+    + '<div class="da-key da-key-btns" style="margin:0 0 4px;">'
+    + '<button type="button" aria-pressed="true" onclick="daWaveToggle(this,\'q3\')"><i class="k-line k-q3"></i>充実度</button>'
+    + '<button type="button" aria-pressed="true" onclick="daWaveToggle(this,\'q1\')"><i class="k-line k-q1"></i>コンディション</button>'
+    + '<button type="button" aria-pressed="true" onclick="daWaveToggle(this,\'q2\')"><i class="k-line k-q2"></i>負荷（5＝きつい）</button></div>'
+    + '<div class="da-note" style="margin:0 0 2px;">名前を押すと、その線を消したり出したりできます</div>'
+    + svg
+    + '<div class="da-wave-info" id="da-wave-info">グラフを押すと、その日の値が出ます</div></div>'
+    + (recN === 0 ? '<div class="da-row" style="color:#b45309;">この範囲の日記は、Q1〜Q3（コンディション・負荷・充実度）が未記入のため、点を表示できません</div>' : '')
+    + (recN === 1 ? '<div class="da-note">Q1〜Q3が記入された記録が1回分なので、点だけ表示しています（2回分以上で線になります）</div>' : '')
+    + (w.capped ? '<div class="da-note">直近90日分を表示しています</div>' : '') + '</div>';
+}
+// 線の表示・非表示（見たい線だけに絞れる）
+function daWaveToggle(btn, k) {
+  const svg = btn.closest('.da-box').querySelector('svg.da-wave');
+  if (!svg) return;
+  const on = btn.getAttribute('aria-pressed') !== 'true';
+  btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  svg.classList.toggle('hide-' + k, !on);
+}
+function daWaveShow(i) {
+  const x = daWaveData && daWaveData[i];
+  const info = document.getElementById('da-wave-info');
+  if (!x || !info) return;
+  info.textContent = (x.q3 || x.q1 || x.q2)
+    ? x.d + '　充実度 ' + (x.q3 || '—') + '　コンディション ' + (x.q1 || '—') + '　負荷 ' + (x.q2 || '—')
+    : x.d + '　記録なし';
+  const svg = info.parentNode.querySelector('svg');
+  const cur = document.getElementById('da-wave-cur');
+  const hit = svg ? svg.querySelectorAll('.w-hit')[i] : null;
+  if (cur && hit) {
+    const cx = parseFloat(hit.getAttribute('x')) + parseFloat(hit.getAttribute('width')) / 2;
+    cur.setAttribute('x1', cx); cur.setAttribute('x2', cx); cur.style.display = '';
+  }
+}
+
+
+// 次の稽古へ：答えは出さず、本人に問いを1つ返す（決めたことは次の剣道日記のQ4で選ぶ）
+function daNext(d) {
+  if (!d.focus || !d.focus.length) return '';
+  return '<div class="da-next"><div class="da-next-k">🧭 次の稽古へ</div>'
+    + '<div class="da-next-q">今のテーマ「' + daEsc(daLabel(d.focus[0].label)) + '」は、次の稽古でも続ける？　それとも変える？</div>'
+    + '<div class="da-next-s">決めたことを意識して稽古し、次の剣道日記のQ4で選ぼう</div></div>';
+}
+
+// ③ 過去の一言：一言を書いた日の直近7日分を新しい順に（期間ボタンに関係なく固定。最初は5件、「もっと見る」で残り）
+const DA_NOTES_FIRST = 5;
+function daNotes(d) {
+  if (d.notes === undefined) return ''; // GAS が v3 より前（過去の一言を返さない）
+  let h = '<div class="da-sec"><div class="da-sec-title">③ 過去の一言' + (d.notes.length ? '<span class="da-sec-sub">直近' + d.notes.length + '日分</span>' : '') + '</div>';
+  if (!d.notes.length) return h + '<div class="da-row">まだ一言を書いた日はありません。</div></div>';
+  h += '<div class="da-notes">' + d.notes.map(function(n, i) {
+    const tags = (n.q4 || []).map(function(t) { return '<span class="da-note-tag">' + daEsc(daLabel(t)) + '</span>'; }).join('');
+    return '<div class="da-note-item' + (i >= DA_NOTES_FIRST ? ' da-note-more' : '') + '">'
+      + '<div class="da-note-head"><span class="da-note-date">' + daEsc(n.d) + '</span>' + tags + '</div>'
+      + '<div class="da-note-text">' + daEsc(n.t) + '</div></div>';
+  }).join('') + '</div>';
+  const rest = d.notes.length - DA_NOTES_FIRST;
+  if (rest > 0) h += '<button type="button" class="da-notes-btn" onclick="daNotesToggle(this,' + rest + ')">もっと見る（残り' + rest + '件）</button>';
+  return h + '</div>';
+}
+function daNotesToggle(btn, rest) {
+  const box = btn.previousElementSibling;
+  const open = box.classList.toggle('show-all');
+  btn.textContent = open ? '閉じる' : 'もっと見る（残り' + rest + '件）';
 }
 
 // ===== 初期化 =====
