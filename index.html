@@ -272,7 +272,7 @@ window.addEventListener('load', function () {
   .diary-submit-btn { width: 100%; margin-top: 6px; padding: 14px; background: linear-gradient(135deg, var(--primary), var(--primary-lt)); color: #fff; border: none; border-radius: var(--radius-md); font-family: inherit; font-size: 15px; font-weight: 700; letter-spacing: .04em; cursor: pointer; transition: all .2s; box-shadow: 0 3px 12px rgba(26,58,107,0.25); }
   .diary-submit-btn:hover { filter: brightness(1.07); transform: translateY(-1px); }
   .diary-submit-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
-  /* 提出ボタン2つを横並び（同じ色・同じ幅。左：提出＋分析 / 右：提出する） */
+  /* ボタン2つを横並び（同じ色・同じ幅。左：分析を見る / 右：提出する） */
   .diary-submit-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; }
   .diary-submit-row .diary-submit-btn { margin-top: 0; min-height: 56px; padding: 8px 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.25; white-space: nowrap; letter-spacing: 0; font-size: clamp(13px, 3.9vw, 15px); }
   .diary-submit-btn .sub { display: block; font-size: 10.5px; font-weight: 500; letter-spacing: 0; opacity: .8; margin-top: 2px; }
@@ -290,12 +290,23 @@ window.addEventListener('load', function () {
   .da-row { background: var(--surface); border-radius: 10px; padding: 6px 10px; margin-bottom: 4px; }
   .da-row b { color: var(--ink-soft); }
   .da-note { font-size: 11px; color: var(--ink-muted); margin-top: 2px; }
-  .da-period { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; background: rgba(26,58,107,0.08); border-radius: 999px; padding: 3px; margin: 6px 0 8px; }
+  .da-period { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; background: rgba(26,58,107,0.08); border-radius: 999px; padding: 3px; margin: 6px 0 8px; }
   .da-period button { min-height: 32px !important; border: none; border-radius: 999px; background: transparent; color: var(--primary); font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 0; }
   .da-period button.on { background: var(--primary); color: #fff; }
   .da-period button { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.15; min-height: 40px !important; }
   .da-period button small { font-size: 9.5px; font-weight: 500; opacity: .8; }
   .da-period button.empty:not(.on) { opacity: .5; }
+  /* ③過去の一言 */
+  .da-sec-sub { font-size: 11px; font-weight: 500; color: var(--ink-muted); margin-left: 6px; }
+  .da-notes { display: flex; flex-direction: column; gap: 6px; }
+  .da-note-item { background: var(--surface); border-radius: 10px; padding: 8px 10px; }
+  .da-note-item.da-note-more { display: none; }
+  .da-notes.show-all .da-note-item.da-note-more { display: block; }
+  .da-note-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin-bottom: 3px; }
+  .da-note-date { font-size: 11.5px; font-weight: 700; color: var(--primary); margin-right: 2px; }
+  .da-note-tag { font-size: 10.5px; color: var(--ink-soft); background: rgba(26,58,107,0.07); border-radius: 999px; padding: 1px 8px; }
+  .da-note-text { font-size: 13px; color: var(--ink); line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
+  .da-notes-btn { width: 100%; margin-top: 6px; min-height: 38px !important; border: 1.5px solid rgba(26,58,107,0.3); border-radius: 999px; background: var(--surface); color: var(--primary); font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
   .da-empty { background: var(--surface); border-radius: 12px; padding: 12px; margin-top: 6px; font-size: 13px; color: var(--ink-soft); font-weight: 700; }
   .da-empty-s { font-size: 11.5px; font-weight: 400; color: var(--ink-muted); margin-top: 2px; }
   .da-empty-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
@@ -755,8 +766,8 @@ window.addEventListener('load', function () {
       </div>
 
       <div class="diary-submit-row">
-        <button class="diary-submit-btn analyze" id="diary-submit-analyze-btn" onclick="submitDiary(true)">📊 提出＋分析<span class="sub">期間を選んで振り返る</span></button>
-        <button class="diary-submit-btn" id="diary-submit-btn" onclick="submitDiary(false)">✦ 提出する</button>
+        <button class="diary-submit-btn analyze" id="diary-analyze-btn" onclick="openAnalysis()">📊 分析を見る<span class="sub">これまでの記録をふり返る</span></button>
+        <button class="diary-submit-btn" id="diary-submit-btn" onclick="submitDiary()">✦ 提出する</button>
       </div>
 
       <!-- 提出後の完了表示（画面は自動で切り替えない） -->
@@ -765,7 +776,7 @@ window.addEventListener('load', function () {
         <button type="button" onclick="hkSwitchPane('peers')">💬 仲間の一言を見る ›</button>
       </div>
 
-      <!-- 日記の分析（「提出＋分析」のときだけ表示。期間はカード内で選ぶ） -->
+      <!-- 日記の分析（「分析を見る」で表示。期間はカード内で選ぶ：1週間／1か月／3か月） -->
       <div class="da-card" id="diary-analysis" style="display:none;"></div>
       </div>
 
@@ -1752,8 +1763,20 @@ function loadDiaryName() {
   }
 }
 
-// 提出（withAnalysis=true のときは、提出後に日記の分析を表示する）
-function submitDiary(withAnalysis) {
+// 「分析を見る」：提出はせず、これまでの記録の分析（先生用と同じ詳細＋友人コメント）を表示する
+function openAnalysis() {
+  const nameEl = document.getElementById('diary-name');
+  let name = ((nameEl && nameEl.value) || '').trim();
+  if (!name) name = (LS.get(LS_NAME) || '').trim();
+  if (!name) { showToast('⚠ 先に名前を入力してください'); editDiaryName(); return; }
+  if (_diaryNameEditing) confirmDiaryName();
+  daDays = DA_DEFAULT_DAYS;
+  daLoad(name);
+  daReveal();
+}
+
+// 提出（名前以外をクリアして次の入力に備える。分析は「分析を見る」から別に開く）
+function submitDiary() {
   const nameEl = document.getElementById('diary-name');
   const name = (nameEl.value || '').trim();
   if (!name) { showToast('⚠ 名前を入力してください'); editDiaryName(); return; }
@@ -1773,12 +1796,11 @@ function submitDiary(withAnalysis) {
   const free = (document.getElementById('diary-free').value || '').trim();
 
   const btn  = document.getElementById('diary-submit-btn');
-  const btn2 = document.getElementById('diary-submit-analyze-btn');
-  const label1 = btn.innerHTML, label2 = btn2.innerHTML;
-  const restore = function() { btn.innerHTML = label1; btn2.innerHTML = label2; btn.disabled = false; btn2.disabled = false; };
-  (withAnalysis ? btn2 : btn).textContent = '送信中…';
-  btn.disabled = true; btn2.disabled = true;
-  daHide();
+  const btn2 = document.getElementById('diary-analyze-btn');
+  const label1 = btn.innerHTML;
+  const restore = function() { btn.innerHTML = label1; btn.disabled = false; if (btn2) btn2.disabled = false; };
+  btn.textContent = '送信中…';
+  btn.disabled = true; if (btn2) btn2.disabled = true;
 
   const data = {
     記録種別: '剣道日記',
@@ -1804,9 +1826,8 @@ function submitDiary(withAnalysis) {
     hkAfterSubmit(name, free);
     if (q4newCustom) q4AddCustom(q4newCustom); // 次回から選択肢として出す
     resetDiaryForm();
-    showToast(withAnalysis ? '✓ 提出しました。分析を表示します' : '✓ 提出しました！');
+    showToast('✓ 提出しました！');
     restore();
-    if (withAnalysis) { daDays = DA_DEFAULT_DAYS; daCounts = null; daLoad(name); daReveal(); }
   })
   .catch(function(){
     showToast('⚠ 送信に失敗しました。再度お試しください');
@@ -1814,12 +1835,13 @@ function submitDiary(withAnalysis) {
   });
 }
 
-// ===== 日記の分析（期間を選べる：1週間／1か月／3か月／全期間） =====
-// GAS の analyzeDiary が数えた結果をそのまま表示する（文章による推測はしない）。
-// 範囲は日付ではなく「直近の記録◯回分」（記録のない期間を選んで空になることがない）
-const DA_PERIODS = [ { d: 7, label: '直近7回' }, { d: 30, label: '直近30回' }, { d: 90, label: '直近90回' }, { d: 0, label: '全部' } ];
-const DA_DEFAULT_DAYS = 7; // 開いたときの期間：直近1週間（前回選んだ期間は覚えない）
-let daName = '', daDays = DA_DEFAULT_DAYS, daReq = 0, daCounts = null;
+// ===== 日記の分析（期間を選べる：1週間／1か月／3か月。先生用と同じ日付ベース） =====
+// GAS の studentAnalyze が数えた結果をそのまま表示する（文章による推測はしない）。
+// 先生用（teacherAnalyze）と同じ分析＋「友人コメントの本文」も表示（本人が自分の記録を見るため）。
+const DA_PERIODS = [ { d: 7, label: '1週間' }, { d: 31, label: '1か月' }, { d: 93, label: '3か月' } ];
+const DA_DEFAULT_DAYS = 31; // 開いたときの期間：直近1か月
+const DA_RANGE_LABEL = { 7: '1週間', 31: '1か月', 93: '3か月' };
+let daName = '', daDays = DA_DEFAULT_DAYS, daReq = 0;
 function daEsc(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) { return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; });
 }
@@ -1831,9 +1853,7 @@ function daHead() {
   return '<div class="da-head">📊 日記の分析<button type="button" onclick="daHide()">閉じる</button></div>'
     + '<div class="da-period" role="group" aria-label="期間">'
     + DA_PERIODS.map(function(p) {
-        const c = daCounts ? daCounts[p.d] : null;
-        return '<button type="button" class="' + (p.d === daDays ? 'on' : '') + (c === 0 ? ' empty' : '') + '" aria-pressed="' + (p.d === daDays) + '" onclick="daSetPeriod(' + p.d + ')">'
-          + p.label + (c != null && (p.d === 0 || c < p.d) ? '<small>' + c + '回分</small>' : '') + '</button>';
+        return '<button type="button" class="' + (p.d === daDays ? 'on' : '') + '" aria-pressed="' + (p.d === daDays) + '" onclick="daSetPeriod(' + p.d + ')">' + p.label + '</button>';
       }).join('')
     + '</div>';
 }
@@ -1861,13 +1881,12 @@ function daLoad(name) {
   const req = ++daReq; // 期間を素早く切り替えたとき、古い結果で上書きしない
   el.innerHTML = daHead() + '<div class="da-meta">分析中…</div>';
   el.style.display = 'block';
-  fetch(GAS_URL + '?' + new URLSearchParams({ action: 'analyzeDiary', name: daName, days: String(daDays), _: Date.now() }).toString())
+  fetch(GAS_URL + '?' + new URLSearchParams({ action: 'studentAnalyze', name: daName, rangeDays: String(daDays), _: Date.now() }).toString())
     .then(function(res) { return res.text(); })
     .then(function(text) {
       if (req !== daReq) return;
       const json = JSON.parse(text);
       if (json.status !== 'ok') throw new Error(json.message || 'error');
-      if (json.periodCounts) daCounts = json.periodCounts;
       el.innerHTML = daHead() + daRender(json);
     })
     .catch(function() {
@@ -1885,7 +1904,7 @@ function daPeers(d) {
   const rx = p.reactions || {};
   const types = (typeof HK_TYPES !== 'undefined') ? HK_TYPES : [ { k: 'nice', icon: '👍', label: 'ナイス' }, { k: 'wakaru', icon: '🤝', label: 'わかる' }, { k: 'sanko', icon: '💡', label: '参考になる' } ];
   const totalRx = types.reduce(function(a, t) { return a + (rx[t.k] || 0); }, 0);
-  let h = '<div class="da-sec"><div class="da-sec-title">③ 仲間からの反応</div>';
+  let h = '<div class="da-sec"><div class="da-sec-title">' + (d.notes === undefined ? '③' : '④') + ' 仲間からの反応</div>';
   if (!totalRx && !p.commentTotal) return h + '<div class="da-row">この範囲の反応はまだありません。</div></div>';
   h += '<div class="da-rx">' + types.map(function(t) {
     return '<div><span class="da-rx-icon">' + t.icon + '</span><b>' + (rx[t.k] || 0) + '</b><small>' + t.label + '</small></div>';
@@ -1968,7 +1987,7 @@ function daFocus(d) {
   });
   svg += '</svg>';
 
-  let h = '<div class="da-sec"><div class="da-sec-title">② 今のテーマ</div>'
+  let h = '<div class="da-sec"><div class="da-sec-title">② 意識したテーマ</div>'
     + '<div class="da-theme"><span class="da-theme-name">' + daEsc(daLabel(f.label)) + '</span>'
     + '<span class="da-theme-sub">この範囲でいちばん多く選んだ項目・' + f.count + '回' + (f.run >= 2 ? '・最新まで' + f.run + '回続けて選択' : '') + '</span></div>'
     + '<div class="da-box"><div class="da-box-title">選んだ日のQ5の結果' + (f.seqTotal > n ? '（直近' + n + '回）' : '') + '</div>' + svg
@@ -2092,23 +2111,46 @@ function daNext(d) {
     + '<div class="da-next-s">決めたことを意識して稽古し、次の剣道日記のQ4で選ぼう</div></div>';
 }
 
+// ③ 過去の一言：一言を書いた日の直近7日分を新しい順に（期間ボタンに関係なく固定。最初は5件、「もっと見る」で残り）
+const DA_NOTES_FIRST = 5;
+function daNotes(d) {
+  if (d.notes === undefined) return ''; // GAS が古い版（過去の一言を返さない）
+  let h = '<div class="da-sec"><div class="da-sec-title">③ 過去の一言' + (d.notes.length ? '<span class="da-sec-sub">直近' + d.notes.length + '日分</span>' : '') + '</div>';
+  if (!d.notes.length) return h + '<div class="da-row">まだ一言を書いた日はありません。</div></div>';
+  h += '<div class="da-notes">' + d.notes.map(function(n, i) {
+    const tags = (n.q4 || []).map(function(t) { return '<span class="da-note-tag">' + daEsc(daLabel(t)) + '</span>'; }).join('');
+    return '<div class="da-note-item' + (i >= DA_NOTES_FIRST ? ' da-note-more' : '') + '">'
+      + '<div class="da-note-head"><span class="da-note-date">' + daEsc(n.d) + '</span>' + tags + '</div>'
+      + '<div class="da-note-text">' + daEsc(n.t) + '</div></div>';
+  }).join('') + '</div>';
+  const rest = d.notes.length - DA_NOTES_FIRST;
+  if (rest > 0) h += '<button type="button" class="da-notes-btn" onclick="daNotesToggle(this,' + rest + ')">もっと見る（残り' + rest + '件）</button>';
+  return h + '</div>';
+}
+function daNotesToggle(btn, rest) {
+  const box = btn.previousElementSibling;
+  const open = box.classList.toggle('show-all');
+  btn.textContent = open ? '閉じる' : 'もっと見る（残り' + rest + '件）';
+}
+
 function daRender(d) {
-  let h = '';
-  const lab = (DA_PERIODS.find(function(p) { return p.d === d.periodDays; }) || {}).label || '';
+  // 先生用と同じ：期間は日付ベース（1週間／1か月／3か月）
+  const rt = d.rangeFrom
+    ? ('直近' + (DA_RANGE_LABEL[d.rangeDays] || '') + '（' + daEsc(d.rangeFrom) + '〜' + daEsc(d.rangeTo) + '）')
+    : ('直近' + (DA_RANGE_LABEL[d.rangeDays] || ''));
   if (!d.days) {
-    return '<div class="da-empty"><div>まだ日記の記録がありません。</div><div class="da-empty-s">提出直後は、反映まで少しかかることがあります。</div></div>' + daPeers(d);
+    return '<div class="da-meta">' + rt + '</div><div class="da-empty"><div>この期間の記録はありません。</div><div class="da-empty-s">提出直後は、反映まで少しかかることがあります。期間を広げても見られます。</div></div>' + daNotes(d) + daPeers(d);
   }
-  const range = (d.periodDays && d.days < d.periodDays) ? '記録 ' + d.days + '回分（全部）' : (lab === '全部' ? '全部（' + d.days + '回分）' : lab + '分');
-  h += '<div class="da-meta">' + range + '：' + daEsc(d.periodFrom) + (d.days > 1 ? '〜' + daEsc(d.periodTo) : '') + '</div>';
-  // GAS が古い版（v11 より前）のときは、グラフ用のデータが返ってこない
+  let h = '<div class="da-meta">' + rt + '・記録 <b>' + d.days + '回</b></div>';
+  // GAS が古い版のときは、グラフ用のデータが返ってこない
   if (d.wave === undefined) {
-    return h + '<div class="da-row" style="color:#b45309;">サーバー側（GAS）が古い版のため、グラフを表示できません。GAS を最新版に置き換え、「新バージョン」でデプロイしてください。</div>' + daPeers(d);
+    return h + '<div class="da-row" style="color:#b45309;">サーバー側（GAS）が古い版のため、グラフを表示できません。GAS を最新版に置き換え、「新バージョン」でデプロイしてください。</div>' + daNotes(d) + daPeers(d);
   }
   if (d.days < d.minDays) {
-    return h + daWave(d) + '<div class="da-meta">記録が' + d.minDays + '回分たまると分析を表示します（あと' + (d.minDays - d.days) + '回）。</div>' + daPeers(d);
+    return h + daWave(d) + '<div class="da-meta">この期間の記録が' + d.minDays + '回分たまると、テーマの分析も表示します（あと' + (d.minDays - d.days) + '回）。</div>' + daNotes(d) + daPeers(d);
   }
-  // 並び：① 調子の波 → ② 今のテーマ（進み具合） → ③ 仲間からの反応 → 次の稽古へ
-  return h + daWave(d) + daFocus(d) + daPeers(d) + daNext(d)
+  // 並び：① 調子の波 → ② 意識したテーマ → ③ 過去の一言 → ④ 仲間からの反応
+  return h + daWave(d) + daFocus(d) + daNotes(d) + daPeers(d)
     + '<div class="da-note" style="margin-top:10px;">※同じ日に複数回出した日は項目ごとに最新の記入、Q5を複数選んだ日は「うまく→少し→できず」の順で1つに数えています</div>';
 }
 
