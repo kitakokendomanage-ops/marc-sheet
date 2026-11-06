@@ -1281,6 +1281,8 @@ window.addEventListener('unhandledrejection', function(e) {
       ask('記録した日', { action: 'getMyDates', name: name }, function(j) { return j.status + (j.message ? ' ' + j.message : '') + ' / 今月 ' + j.monthCount + '回 / 直近の日 ' + (j.dates || []).join(','); }),
       ask('分析', { action: 'analyzeDiary', name: name, days: 30 }, function(j) { return j.status + (j.message ? ' ' + j.message : '') + ' / 記録 ' + (j.totalRecords != null ? j.totalRecords : j.days) + '件'; }),
       ask('仲間の一言', { action: 'getNews', name: name }, function(j) { return j.status + (j.message ? ' ' + j.message : '') + ' / ' + (j.hitokoto || []).length + '人分' + (j.warn ? ' / GASのエラー：' + j.warn : ''); }),
+      (function() { const t0 = Date.now(); return gasPost({ action: 'joinDojo', name: name || '確認' }).then(function(j) { return '書き込み口（POST）：' + j.status + '（' + ((Date.now() - t0) / 1000).toFixed(1) + '秒）'; }).catch(function(e) { return '書き込み口（POST）：失敗 ' + (e && e.message) + '（' + ((Date.now() - t0) / 1000).toFixed(1) + '秒）'; }); })(),
+      (function() { try { localStorage.setItem('kd_check', '1'); const ok = localStorage.getItem('kd_check') === '1'; localStorage.removeItem('kd_check'); return Promise.resolve('名前の保存：' + (ok ? 'できる' : 'できない')); } catch (e) { return Promise.resolve('名前の保存：できない（' + e.message + '）'); } })(),
       ask('部員の名前（シート）', { action: 'teacherList' }, function(j) { return (j.students || []).map(function(x) { return x.name + '(' + x.count + ')'; }).join('、') || (j.message || j.status); })
     ]).then(function(r) { box.textContent = lines.concat(r).join('\n'); });
   });
@@ -1460,9 +1462,11 @@ function kdClubConfirm() {
     .catch(function() { done(); showNameMsg('通信できませんでした。電波のよい所で、もう一度「決定」を押してください'); return false; });
 }
 function kdClubJoin(n) {
-  return gasPost({ action: 'joinDojo', name: n })
-    .then(function(res) { myDojo = res.dojo || null; applyDiaryName(n); return true; })
-    .catch(function() { applyDiaryName(n); return true; }); // 部の情報は、次に仲間の一言を開いたときに読み直す
+  // 北高版：部に入る手続きはGAS側に何もないので、通信を待たずにすぐ名前を決めて記録を読み込む
+  // （前は書き込み用の通信の返事を待っていたため、通信が遅いと名前が決まらず、記録も出なかった）
+  applyDiaryName(n);
+  if (LS.get(LS_NAME) !== n) showToast('⚠ このブラウザでは名前を保存できません。SafariかChromeで開いてください');
+  return Promise.resolve(true);
 }
 function kdNameAs(mode, already) {
   const el = document.getElementById('diary-name');
