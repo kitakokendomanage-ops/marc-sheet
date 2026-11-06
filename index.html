@@ -95,9 +95,9 @@ input, textarea { -webkit-appearance: none; appearance: none; }
 .header-kamon { width: 44px; height: 44px; flex-shrink: 0; border-radius: var(--r-m); display: block; transition: width .25s var(--ease, ease), height .25s var(--ease, ease); }
 .header-en, .diary-mark { display: none; }
 /* ロゴタイプ：題字は大きく太く、副題は細く小さく字間を広げ、題字と同じ幅にそろえる */
-.header-text { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
+.header-text { flex: 1 0 auto; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
 .header-text > wbr { display: none; } /* 改行位置の印（BudouX）が列の行として高さをとらないように */
-.header-title { font-size: var(--t-2xl); font-weight: 800; line-height: 1.1; letter-spacing: .08em; margin-right: -.08em; transition: font-size .25s var(--ease, ease); }
+.header-title { white-space: nowrap; font-size: var(--t-2xl); font-weight: 800; line-height: 1.1; letter-spacing: .08em; margin-right: -.08em; transition: font-size .25s var(--ease, ease); }
 .header-subtitle { margin-top: 4px; font-size: var(--t-xs); font-weight: 400; color: var(--label2); letter-spacing: .22em; margin-right: -.22em; line-height: 1.2; white-space: nowrap;
   max-height: 2em; overflow: hidden; transition: max-height .25s var(--ease, ease), opacity .2s, margin-top .25s var(--ease, ease); }
 .hs-key { color: var(--label); font-weight: 400; }
@@ -855,7 +855,10 @@ function kdUrl(params) {
 (function() {
   const _fetch = window.fetch.bind(window);
   window.fetch = function(u, o) {
-    const p = _fetch(u, o);
+    // GAS が混んで返事が来ないときも、30秒で「読み込めませんでした」に切り替える（ずっとクルクルさせない）
+    const p = String(u).indexOf(GAS_URL) === 0
+      ? Promise.race([_fetch(u, o), new Promise(function(_, rej) { setTimeout(function() { rej(new Error('timeout')); }, 30000); })])
+      : _fetch(u, o);
     if (String(u).indexOf(GAS_URL) === 0) {
       p.then(function(r) { return r.clone().json(); }).then(function(j) { if (j && j.code === 'auth') kdNeedAuth(); }).catch(function() {});
     }
@@ -1199,7 +1202,7 @@ function loadNews() {
     if (data.status !== 'ok') { hkState = 'error'; renderDojo(); drawHitokoto(); return; }
     if(data.status === 'ok'){
       // まだ道場に入っていない（前の版から使っている人など）：空いている道場に自動で入って読み直す
-      if (!data.dojo && !_dojoAutoTried) {
+      if (!KD_CLUB && !data.dojo && !_dojoAutoTried) { // 北高版（部全体）は道場に入る手続きがないので、ここで止まらないようにする
         _dojoAutoTried = true;
         gasPost({ action: 'joinDojo', name: me }).then(function() { loadNews(); }).catch(function() {});
         return;
@@ -1252,6 +1255,34 @@ window.addEventListener('unhandledrejection', function(e) {
 });
 
 
+// ===== 確認用：URLの最後に ?check=1 を付けて開くと、この端末の名前とGASの返事を画面の上に出す =====
+(function() {
+  if (!/[?&]check=1/.test(location.search)) return;
+  document.addEventListener('DOMContentLoaded', function() {
+    const box = document.createElement('pre');
+    box.style.cssText = 'margin:8px 16px;padding:12px;border-radius:12px;background:#111;color:#9f9;font-size:12px;line-height:1.5;white-space:pre-wrap;word-break:break-all;';
+    document.body.insertBefore(box, document.body.firstChild);
+    const name = confirmedNick();
+    const codes = Array.from(name).map(function(c) { return c + ':' + c.charCodeAt(0).toString(16); }).join(' ');
+    const lines = ['ページ ver：' + ((document.querySelector('.site-footer-ver') || {}).textContent || ''), 'この端末の名前：「' + name + '」', '文字コード：' + codes];
+    box.textContent = lines.join('\n') + '\n（GASに問い合わせ中…）';
+    const ask = function(label, params, sum) {
+      return fetch(kdUrl(params)).then(function(r) { return r.text(); }).then(function(t) {
+        let j = null; try { j = JSON.parse(t); } catch (e) {}
+        return label + '：' + (j ? sum(j) : '読めない返事 ' + t.slice(0, 120));
+      }).catch(function(e) { return label + '：通信エラー ' + e.message; });
+    };
+    Promise.all([
+      ask('GAS', {}, function(j) { return j.message || j.status; }),
+      ask('記録した日', { action: 'getMyDates', name: name }, function(j) { return j.status + (j.message ? ' ' + j.message : '') + ' / 今月 ' + j.monthCount + '回 / 直近の日 ' + (j.dates || []).join(','); }),
+      ask('分析', { action: 'analyzeDiary', name: name, days: 30 }, function(j) { return j.status + (j.message ? ' ' + j.message : '') + ' / 記録 ' + (j.totalRecords != null ? j.totalRecords : j.days) + '件'; }),
+      ask('仲間の一言', { action: 'getNews', name: name }, function(j) { return j.status + (j.message ? ' ' + j.message : '') + ' / ' + (j.hitokoto || []).length + '人分' + (j.warn ? ' / GASのエラー：' + j.warn : ''); }),
+      (function() { const t0 = Date.now(); return gasPost({ action: 'joinDojo', name: name || '確認' }).then(function(j) { return '書き込み口（POST）：' + j.status + '（' + ((Date.now() - t0) / 1000).toFixed(1) + '秒）'; }).catch(function(e) { return '書き込み口（POST）：失敗 ' + (e && e.message) + '（' + ((Date.now() - t0) / 1000).toFixed(1) + '秒）'; }); })(),
+      (function() { try { localStorage.setItem('kd_check', '1'); const ok = localStorage.getItem('kd_check') === '1'; localStorage.removeItem('kd_check'); return Promise.resolve('名前の保存：' + (ok ? 'できる' : 'できない')); } catch (e) { return Promise.resolve('名前の保存：できない（' + e.message + '）'); } })(),
+      ask('部員の名前（シート）', { action: 'teacherList' }, function(j) { return (j.students || []).map(function(x) { return x.name + '(' + x.count + ')'; }).join('、') || (j.message || j.status); })
+    ]).then(function(r) { box.textContent = lines.concat(r).join('\n'); });
+  });
+})();
 document.addEventListener('DOMContentLoaded', function() {
   loadDiaryName();
   setTimeout(pmLoad, 0);
@@ -1414,9 +1445,11 @@ function kdClubConfirm() {
     .catch(function() { done(); showNameMsg('通信できませんでした。電波のよい所で、もう一度「決定」を押してください'); return false; });
 }
 function kdClubJoin(n) {
-  return gasPost({ action: 'joinDojo', name: n })
-    .then(function(res) { myDojo = res.dojo || null; applyDiaryName(n); return true; })
-    .catch(function() { applyDiaryName(n); return true; }); // 部の情報は、次に仲間の一言を開いたときに読み直す
+  // 北高版：部に入る手続きはGAS側に何もないので、通信を待たずにすぐ名前を決めて記録を読み込む
+  // （前は書き込み用の通信の返事を待っていたため、通信が遅いと名前が決まらず、記録も出なかった）
+  applyDiaryName(n);
+  if (LS.get(LS_NAME) !== n) showToast('⚠ このブラウザでは名前を保存できません。SafariかChromeで開いてください');
+  return Promise.resolve(true);
 }
 function kdNameAs(mode, already) {
   const el = document.getElementById('diary-name');
