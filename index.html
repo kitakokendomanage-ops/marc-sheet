@@ -95,9 +95,9 @@ input, textarea { -webkit-appearance: none; appearance: none; }
 .header-kamon { width: 44px; height: 44px; flex-shrink: 0; border-radius: var(--r-m); display: block; transition: width .25s var(--ease, ease), height .25s var(--ease, ease); }
 .header-en, .diary-mark { display: none; }
 /* ロゴタイプ：題字は大きく太く、副題は細く小さく字間を広げ、題字と同じ幅にそろえる */
-.header-text { flex: 1 0 auto; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
+.header-text { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
 .header-text > wbr { display: none; } /* 改行位置の印（BudouX）が列の行として高さをとらないように */
-.header-title { white-space: nowrap; font-size: var(--t-2xl); font-weight: 800; line-height: 1.1; letter-spacing: .08em; margin-right: -.08em; transition: font-size .25s var(--ease, ease); }
+.header-title { font-size: var(--t-2xl); font-weight: 800; line-height: 1.1; letter-spacing: .08em; margin-right: -.08em; transition: font-size .25s var(--ease, ease); }
 .header-subtitle { margin-top: 4px; font-size: var(--t-xs); font-weight: 400; color: var(--label2); letter-spacing: .22em; margin-right: -.22em; line-height: 1.2; white-space: nowrap;
   max-height: 2em; overflow: hidden; transition: max-height .25s var(--ease, ease), opacity .2s, margin-top .25s var(--ease, ease); }
 .hs-key { color: var(--label); font-weight: 400; }
@@ -539,7 +539,17 @@ body.kd-noname .diary-submit-need { display: block; }
 .kd-pin:focus { outline: none; box-shadow: 0 0 0 2px var(--tint); }
 body.kd-sheet-open { overflow: hidden; }
 /* おうちの人から */
-.my-oya { display: inline-block; margin: 0 4px 0 2px; padding: 0 6px; border-radius: var(--r-full); background: var(--raised); color: var(--label2); font-size: var(--t-xs); font-weight: 600; line-height: 1.6; vertical-align: 1px; }
+.pm-card { margin: 12px 0; padding: 16px; border-radius: var(--r-l); background: var(--card); box-shadow: var(--card-shadow), inset 4px 0 0 var(--kurenai); }
+.pm-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.pm-title { font-size: var(--t-sm); font-weight: 700; color: var(--label); letter-spacing: .04em; }
+.pm-new { margin-left: auto; padding: 2px 8px; border-radius: var(--r-full); background: var(--kurenai); color: #fff; font-size: var(--t-xs); font-weight: 700; letter-spacing: .06em; }
+.pm-cheers { display: flex; flex-wrap: wrap; gap: 8px; }
+.pm-cheers:empty { display: none; }
+.pm-chip { display: inline-flex; align-items: center; gap: 4px; height: 32px; padding: 0 12px; border-radius: var(--r-full); background: var(--raised); font-size: var(--t-sm); color: var(--label2); }
+.pm-chip b { color: var(--label); font-weight: 600; }
+.pm-cm { margin-top: 8px; padding: 8px 12px; border-radius: var(--r-m); background: var(--raised); font-size: var(--t-md); line-height: 1.6; word-break: break-word; }
+.pm-cm b { font-weight: 600; }
+.pm-cm-d { margin-left: 8px; font-size: var(--t-xs); color: var(--label3); }
 /* 部の外のリンク（公式YouTube・専用AI） */
 .kd-links { margin: 16px 0 0; border-radius: var(--r-l); background: var(--card); box-shadow: var(--card-shadow); overflow: hidden; }
 .kd-link { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 12px 16px; color: var(--label); text-decoration: none; }
@@ -676,6 +686,11 @@ body.kd-sheet-open { overflow: hidden; }
 
       <!-- 前回の一言に届いた反応（1行。「見る」を押すと前回の一言と反応が開く） -->
       <!-- おうちの人から（親版から届いた応援・コメント。届いたときだけ出す） -->
+      <div class="pm-card" id="pm-card" style="display:none;">
+        <div class="pm-head"><span class="pm-title">おうちの人から</span><span class="pm-new" id="pm-new" style="display:none;">NEW</span></div>
+        <div class="pm-cheers" id="pm-cheers"></div>
+        <div id="pm-comments"></div>
+      </div>
       <div class="my-notice-wrap" id="my-notice-wrap" style="display:none;">
         <button type="button" class="my-notice" id="my-notice" onclick="hkToggleNotice()"></button>
         <div class="my-notice-body" id="my-notice-body" style="display:none;"></div>
@@ -855,10 +870,7 @@ function kdUrl(params) {
 (function() {
   const _fetch = window.fetch.bind(window);
   window.fetch = function(u, o) {
-    // GAS が混んで返事が来ないときも、30秒で「読み込めませんでした」に切り替える（ずっとクルクルさせない）
-    const p = String(u).indexOf(GAS_URL) === 0
-      ? Promise.race([_fetch(u, o), new Promise(function(_, rej) { setTimeout(function() { rej(new Error('timeout')); }, 30000); })])
-      : _fetch(u, o);
+    const p = _fetch(u, o);
     if (String(u).indexOf(GAS_URL) === 0) {
       p.then(function(r) { return r.clone().json(); }).then(function(j) { if (j && j.code === 'auth') kdNeedAuth(); }).catch(function() {});
     }
@@ -1202,7 +1214,7 @@ function loadNews() {
     if (data.status !== 'ok') { hkState = 'error'; renderDojo(); drawHitokoto(); return; }
     if(data.status === 'ok'){
       // まだ道場に入っていない（前の版から使っている人など）：空いている道場に自動で入って読み直す
-      if (!KD_CLUB && !data.dojo && !_dojoAutoTried) { // 北高版（部全体）は道場に入る手続きがないので、ここで止まらないようにする
+      if (!data.dojo && !_dojoAutoTried) {
         _dojoAutoTried = true;
         gasPost({ action: 'joinDojo', name: me }).then(function() { loadNews(); }).catch(function() {});
         return;
@@ -1255,34 +1267,6 @@ window.addEventListener('unhandledrejection', function(e) {
 });
 
 
-// ===== 確認用：URLの最後に ?check=1 を付けて開くと、この端末の名前とGASの返事を画面の上に出す =====
-(function() {
-  if (!/[?&]check=1/.test(location.search)) return;
-  document.addEventListener('DOMContentLoaded', function() {
-    const box = document.createElement('pre');
-    box.style.cssText = 'margin:8px 16px;padding:12px;border-radius:12px;background:#111;color:#9f9;font-size:12px;line-height:1.5;white-space:pre-wrap;word-break:break-all;';
-    document.body.insertBefore(box, document.body.firstChild);
-    const name = confirmedNick();
-    const codes = Array.from(name).map(function(c) { return c + ':' + c.charCodeAt(0).toString(16); }).join(' ');
-    const lines = ['ページ ver：' + ((document.querySelector('.site-footer-ver') || {}).textContent || ''), 'この端末の名前：「' + name + '」', '文字コード：' + codes];
-    box.textContent = lines.join('\n') + '\n（GASに問い合わせ中…）';
-    const ask = function(label, params, sum) {
-      return fetch(kdUrl(params)).then(function(r) { return r.text(); }).then(function(t) {
-        let j = null; try { j = JSON.parse(t); } catch (e) {}
-        return label + '：' + (j ? sum(j) : '読めない返事 ' + t.slice(0, 120));
-      }).catch(function(e) { return label + '：通信エラー ' + e.message; });
-    };
-    Promise.all([
-      ask('GAS', {}, function(j) { return j.message || j.status; }),
-      ask('記録した日', { action: 'getMyDates', name: name }, function(j) { return j.status + (j.message ? ' ' + j.message : '') + ' / 今月 ' + j.monthCount + '回 / 直近の日 ' + (j.dates || []).join(','); }),
-      ask('分析', { action: 'analyzeDiary', name: name, days: 30 }, function(j) { return j.status + (j.message ? ' ' + j.message : '') + ' / 記録 ' + (j.totalRecords != null ? j.totalRecords : j.days) + '件'; }),
-      ask('仲間の一言', { action: 'getNews', name: name }, function(j) { return j.status + (j.message ? ' ' + j.message : '') + ' / ' + (j.hitokoto || []).length + '人分' + (j.warn ? ' / GASのエラー：' + j.warn : ''); }),
-      (function() { const t0 = Date.now(); return gasPost({ action: 'joinDojo', name: name || '確認' }).then(function(j) { return '書き込み口（POST）：' + j.status + '（' + ((Date.now() - t0) / 1000).toFixed(1) + '秒）'; }).catch(function(e) { return '書き込み口（POST）：失敗 ' + (e && e.message) + '（' + ((Date.now() - t0) / 1000).toFixed(1) + '秒）'; }); })(),
-      (function() { try { localStorage.setItem('kd_check', '1'); const ok = localStorage.getItem('kd_check') === '1'; localStorage.removeItem('kd_check'); return Promise.resolve('名前の保存：' + (ok ? 'できる' : 'できない')); } catch (e) { return Promise.resolve('名前の保存：できない（' + e.message + '）'); } })(),
-      ask('部員の名前（シート）', { action: 'teacherList' }, function(j) { return (j.students || []).map(function(x) { return x.name + '(' + x.count + ')'; }).join('、') || (j.message || j.status); })
-    ]).then(function(r) { box.textContent = lines.concat(r).join('\n'); });
-  });
-})();
 document.addEventListener('DOMContentLoaded', function() {
   loadDiaryName();
   setTimeout(pmLoad, 0);
@@ -1445,11 +1429,9 @@ function kdClubConfirm() {
     .catch(function() { done(); showNameMsg('通信できませんでした。電波のよい所で、もう一度「決定」を押してください'); return false; });
 }
 function kdClubJoin(n) {
-  // 北高版：部に入る手続きはGAS側に何もないので、通信を待たずにすぐ名前を決めて記録を読み込む
-  // （前は書き込み用の通信の返事を待っていたため、通信が遅いと名前が決まらず、記録も出なかった）
-  applyDiaryName(n);
-  if (LS.get(LS_NAME) !== n) showToast('⚠ このブラウザでは名前を保存できません。SafariかChromeで開いてください');
-  return Promise.resolve(true);
+  return gasPost({ action: 'joinDojo', name: n })
+    .then(function(res) { myDojo = res.dojo || null; applyDiaryName(n); return true; })
+    .catch(function() { applyDiaryName(n); return true; }); // 部の情報は、次に仲間の一言を開いたときに読み直す
 }
 function kdNameAs(mode, already) {
   const el = document.getElementById('diary-name');
@@ -2550,6 +2532,7 @@ function hkMyAllPeople(mine) {
 function drawMyReactions() {
   const me = hkMe();
   const mine = hkItems.find(function(x) { return me && x.name === me; });
+  // 仲間の一言の呼びかけ：自分の一言に反応をもらったことがある人にだけ出す（他の人の一言があるとき）
   const nudge = document.getElementById('hk-nudge');
   const nwrap = document.getElementById('my-notice-wrap');
   const notice = document.getElementById('my-notice');
@@ -2557,54 +2540,41 @@ function drawMyReactions() {
   if (nudge) nudge.style.display = 'none';
   if (!nwrap || !notice || !nbody) return;
   nwrap.style.display = 'none';
-  // おうちの人からの分の読み込みが終わるまでは出さない（人数が途中で変わって見えないように）
-  if (pmState !== 'done') return;
-  const hasMine = !!(mine && mine.id);
-  if (hasMine) {
-    if (hkMyCommentsId !== mine.id) hkMyComments = [];
-    // コメントの読み込みが終わるまでは出さない（途中の人数や色が一瞬出て切り替わるのを防ぐ）
-    if (hkMyCommentsId !== mine.id) return;
-  }
-  const rx = hasMine ? (mine.reactions || {}) : {};
-  const pm = pmVisible(hasMine ? mine : null);
-  const all = (hasMine ? hkMyAllPeople(mine) : []);
-  pmPeople(pm).forEach(function(k) { if (all.indexOf(k) < 0) all.push(k); });
+  if (!mine || !mine.id) { hkNoticeOpen = false; return; }
+  if (hkMyCommentsId !== mine.id) hkMyComments = [];
+  // コメントの読み込みが終わるまでは出さない（途中の人数や色が一瞬出て切り替わるのを防ぐ）
+  if (hkMyCommentsId !== mine.id) return;
+  const rx = mine.reactions || {};
+  const all = hkMyAllPeople(mine);
   if (!all.length) { hkNoticeOpen = false; return; } // 反応が1件もなければ何も出さない
 
-  const nw = hasMine ? hkNewSince(mine) : { who: [] };
-  pmPeople(pmUnseen(pm)).forEach(function(k) { if (nw.who.indexOf(k) < 0) nw.who.push(k); });
+  const nw = hkNewSince(mine);
   // 開いて既読にした後も、このページを見ている間は「届きました 🎉」のまま（押した直後に表示が変わらないように）
   const justN = (hkJustSeen || []).filter(function(x) { return all.indexOf(x) >= 0; }).length;
   const newN = Math.max(nw.who.length, justN);
   const goText = hkNoticeOpen ? '閉じる ▲' : (newN ? '見る ›' : '›');
   const go = '<span class="go"></span>';
   // 光は、ページを開いて未読の新着を最初に表示したときだけ（再描画で光り直さない）
-  const shineKey = hasMine ? mine.id : 'oya';
-  if (nw.who.length && !hkShineId) hkShineId = shineKey;
-  const shine = newN && hkShineId === shineKey;
+  if (nw.who.length && !hkShineId) hkShineId = mine.id;
+  const shine = newN && hkShineId === mine.id;
   notice.className = 'my-notice' + (newN ? ' is-new' : '') + (shine ? ' shine' : '') + (hkNoticeOpen ? ' open' : '');
-  const head = hasMine ? escH(mine.date) + 'の一言に' : 'おうちの人から';
   const nhtml = newN
-    ? '<span class="my-dot" aria-hidden="true"></span>' + head + (hasMine ? newN + '人から' : '') + '届きました' + go
-    : head + (hasMine ? all.length + '人から' : '') + '届いています' + go;
+    ? '<span class="my-dot" aria-hidden="true"></span>' + escH(mine.date) + 'の一言に' + newN + '人から届きました' + go
+    : escH(mine.date) + 'の一言に' + all.length + '人から届いています' + go;
   // 内容が変わったときだけ書き換える（毎回書き換えると🎉の動きが再描画のたびにやり直しになるため）
   if (notice._html !== nhtml) { notice.innerHTML = nhtml; notice._html = nhtml; }
   const goEl = notice.querySelector('.go');
   if (goEl && goEl.textContent !== goText) goEl.textContent = goText;
   if (hkNoticeOpen) {
     const bold = hkJustSeen || [];
-    const nm = function(n) {
-      const d = pmIsKey(n) ? escH(pmFrom(n)) + '<span class="my-oya">おうちの人</span>' : escH(hkDn(n));
-      return bold.indexOf(n) >= 0 ? '<b class="my-new">' + d + '</b>' : d;
-    };
+    const nm = function(n) { const d = escH(hkDn(n)); return bold.indexOf(n) >= 0 ? '<b class="my-new">' + d + '</b>' : d; };
     const lines = HK_TYPES.filter(function(t) { return (rx[t.k] || []).length; }).map(function(t) {
       return '<div class="my-line">' + t.icon + ' ' + rx[t.k].map(nm).join('、') + '<span class="my-lbl">が' + t.label + '</span></div>';
     }).join('') + hkMyComments.map(function(c, k) {
       return '<div class="my-line">💬 ' + nm(c.from) + '「' + escH(c.text) + '」'
         + (c.cid && !KD_CLUB ? '<button type="button" class="my-report" onclick="event.stopPropagation();hkReportComment(' + k + ')">通報</button>' : '') + '</div>';
-    }).join('') + pmLines(pm, nm);
-    nbody.innerHTML = (hasMine ? '<div class="my-notice-label">前回の一言</div><div class="my-text">' + escH(mine.text) + '</div>' : '')
-      + '<div class="my-rx">' + lines + '</div>';
+    }).join('');
+    nbody.innerHTML = '<div class="my-notice-label">前回の一言</div><div class="my-text">' + escH(mine.text) + '</div><div class="my-rx">' + lines + '</div>';
     nbody.style.display = 'block';
   } else {
     nbody.style.display = 'none';
@@ -2613,7 +2583,6 @@ function drawMyReactions() {
 }
 // 開いている状態で見えている新着を既読にする（コメントの読み込みが後から終わった場合も呼ばれる）
 function hkMarkMySeen(mine) {
-  pmMarkSeen(mine);
   if (!mine || !mine.id) return;
   if (hkMyCommentsId !== mine.id) hkMyComments = [];
   const n = hkNewSince(mine);
@@ -2628,7 +2597,7 @@ function hkMarkMySeen(mine) {
 function hkToggleNotice() {
   const me = hkMe();
   const mine = hkItems.find(function(x) { return me && x.name === me; });
-  if (!mine && !pmVisible(null).length) return;
+  if (!mine) return;
   hkNoticeOpen = !hkNoticeOpen;
   if (hkNoticeOpen) hkMarkMySeen(mine);
   drawMyReactions();
@@ -2699,74 +2668,33 @@ function kdReportSend(r) {
     });
 }
 // ===== おうちの人から（親版から届いた応援・コメント） =====
-// 仲間からのリアクション・コメントと同じ「〇〇の一言に届きました」の中に並べる。
-// 取りに行くのは本人の名前の分だけで、仲間の一言の一覧（ほかの部員に見える所）には出さない。
-var PM_TYPES = [
-  { k: 'nice',    icon: '👍', label: 'いいね' },
-  { k: 'ganbare', icon: '💪', label: 'がんばれ' },
-  { k: 'sugoi',   icon: '👏', label: 'すごい' }
-];
-var LS_PM_SEEN = 'marc_oya_seen'; // 今までの北高版と同じ（既読の位置を引き継ぐ）
-var PM_KEY = '\u0001oya:';       // 部員の名前と重ならない印
-var pmState = 'idle', pmAll = [], pmReq = 0;
-function pmIsKey(k) { return String(k).indexOf(PM_KEY) === 0; }
-function pmFrom(k) { return String(k).slice(PM_KEY.length) || 'おうちの人'; }
-function pmSeenMs() { return +(LS.get(LS_PM_SEEN) || 0); }
-// いまの一言を書いた後に届いた分（＋まだ見ていない分）。一言がまだ無い人は、直近14日の分
-function pmVisible(mine) {
-  // 親の分は秒までの時刻なので、一言の時刻も秒にそろえて比べる
-  const base = mine && mine.id ? Math.floor((+String(mine.id).split('|')[1] || 0) / 1000) * 1000 : 0;
-  const from = base || (Date.now() - HK_FRESH_DAYS * 86400000);
-  const seen = pmSeenMs();
-  return pmAll.filter(function(x) { return x.ms >= from || x.ms > seen; });
-}
-function pmUnseen(list) { const seen = pmSeenMs(); return list.filter(function(x) { return x.ms > seen; }); }
-function pmPeople(list) {
-  const who = [];
-  list.forEach(function(x) { const k = PM_KEY + (x.from || 'おうちの人'); if (who.indexOf(k) < 0) who.push(k); });
-  return who;
-}
-function pmLines(list, nm) {
-  const cheers = list.filter(function(x) { return x.kind === 'cheer'; });
-  const cms = list.filter(function(x) { return x.kind === 'cm'; }).sort(function(a, b) { return a.ms - b.ms; });
-  return PM_TYPES.map(function(t) {
-    const who = pmPeople(cheers.filter(function(x) { return x.type === t.k; }));
-    return who.length ? '<div class="my-line">' + t.icon + ' ' + who.map(nm).join('、') + '<span class="my-lbl">から「' + t.label + '」</span></div>' : '';
-  }).join('') + cms.map(function(c) {
-    return '<div class="my-line">💬 ' + nm(PM_KEY + (c.from || 'おうちの人')) + '「' + escH(c.text) + '」</div>';
-  }).join('');
-}
-function pmMarkSeen(mine) {
-  if (pmState !== 'done') return;
-  const pm = pmVisible(mine && mine.id ? mine : null);
-  const nw = pmPeople(pmUnseen(pm));
-  hkJustSeen = (hkJustSeen || []).concat(nw.filter(function(x) { return (hkJustSeen || []).indexOf(x) < 0; }));
-  let maxMs = pmSeenMs();
-  pm.forEach(function(x) { if (x.ms > maxMs) maxMs = x.ms; });
-  LS.set(LS_PM_SEEN, String(maxMs));
-}
+const PM_CHEER = { nice: '👍 いいね', ganbare: '💪 がんばれ', sugoi: '👏 すごい' };
+const LS_PM_SEEN = 'marc_oya_seen'; // 今までの北高版と同じ（既読の位置を引き継ぐ）
 function pmLoad() {
   const me = confirmedNick();
-  const req = ++pmReq;
-  pmAll = [];
-  if (!me) { pmState = 'idle'; return; }
-  pmState = 'loading';
-  const done = function(list) {
-    if (req !== pmReq || confirmedNick() !== me) return;
-    pmAll = list; pmState = 'done';
-    if (hkNoticeOpen) hkMarkMySeen(hkItems.find(function(x) { return x.name === me; }));
-    drawMyReactions();
-  };
+  const card = document.getElementById('pm-card');
+  if (!card) return;
+  if (!me) { card.style.display = 'none'; return; }
   fetch(kdUrl({ action: 'getParentMessages', name: me }))
     .then(function(r) { return r.json(); })
     .then(function(j) {
-      if (!j || j.status !== 'ok') return done([]);
-      const list = (j.cheers || []).filter(function(c) { return PM_TYPES.some(function(t) { return t.k === c.type; }); })
-        .map(function(c) { return { kind: 'cheer', type: c.type, from: String(c.from || ''), ms: +c.ms || 0 }; })
-        .concat((j.comments || []).map(function(c) { return { kind: 'cm', from: String(c.from || ''), text: String(c.text || ''), ms: +c.ms || 0 }; }));
-      done(list);
+      if (confirmedNick() !== me || !j || j.status !== 'ok') return;
+      const cheers = j.cheers || [], comments = j.comments || [];
+      if (!cheers.length && !comments.length) { card.style.display = 'none'; return; }
+      document.getElementById('pm-cheers').innerHTML = cheers.map(function(c) {
+        return '<span class="pm-chip">' + escH(c.from || 'おうちの人') + '<b>' + (PM_CHEER[c.type] || '応援') + '</b></span>';
+      }).join('');
+      document.getElementById('pm-comments').innerHTML = comments.slice(0, 5).map(function(c) {
+        return '<div class="pm-cm"><b>' + escH(c.from || 'おうちの人') + '</b>「' + escH(c.text) + '」<span class="pm-cm-d">' + (c.ms ? dateLabel(new Date(c.ms).toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' })) : '') + '</span></div>';
+      }).join('');
+      let maxMs = 0;
+      cheers.concat(comments).forEach(function(x) { if (x.ms > maxMs) maxMs = x.ms; });
+      const seen = +(LS.get(LS_PM_SEEN) || 0);
+      document.getElementById('pm-new').style.display = maxMs > seen ? 'inline-block' : 'none';
+      if (maxMs > seen) LS.set(LS_PM_SEEN, String(maxMs));
+      card.style.display = 'block';
     })
-    .catch(function() { done([]); }); // 読めなくても、仲間からの分は出す
+    .catch(function() {});
 }
 function hkTogglePicker(i) {
   hkOpenNames = null;
