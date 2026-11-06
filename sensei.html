@@ -632,15 +632,20 @@ body.kd-sheet-open { overflow: hidden; }
 .t-sensei label { flex-shrink: 0; font-size: var(--t-sm); color: var(--label2); }
 .t-sensei input { flex: 1; min-width: 0; height: 44px; padding: 0 12px; border: 0; border-radius: var(--r-m); background: var(--raised); color: var(--label); font-size: var(--t-md); }
 .t-sensei button { flex-shrink: 0; height: 44px; padding: 0 16px; border: 0; border-radius: var(--r-m); background: var(--grad); color: var(--on-tint); font-size: var(--t-md); font-weight: 600; }
+.t-sensei input::placeholder { font-size: var(--t-sm); color: var(--label3); }
+@media (max-width: 374px) { .t-sensei { flex-wrap: wrap; } .t-sensei input { flex-basis: 100%; } .t-sensei button { width: 100%; } }
 .t-sensei-note { margin: -4px 4px 12px; font-size: var(--t-xs); color: var(--label2); }
 .t-who { display: flex; align-items: center; gap: 8px; }
 .t-who-n { font-size: var(--t-md); font-weight: 600; }
 .t-who button { padding: 0; border: 0; background: none; color: var(--tint); font-size: var(--t-sm); }
 .t-sec-h { display: flex; align-items: baseline; gap: 8px; margin: 20px 4px 8px; }
 .t-sec-t { font-size: var(--t-lg); font-weight: 700; }
-.t-sec-s { margin-left: auto; font-size: var(--t-xs); color: var(--label2); }
+.t-sec-t, .t-sec-c { flex-shrink: 0; white-space: nowrap; }
+.t-sec-s { margin-left: auto; text-align: right; font-size: var(--t-xs); color: var(--label2); }
 /* 気になる部員 */
-.t-alerts { border-radius: var(--r-l); background: var(--card); box-shadow: var(--card-shadow), inset 4px 0 0 var(--kurenai); overflow: hidden; }
+.t-alerts { border-radius: var(--r-l); background: var(--card); box-shadow: var(--card-shadow); overflow: hidden; }
+.t-sec-c { min-width: 22px; height: 22px; padding: 0 7px; border-radius: var(--r-full); background: var(--kurenai); color: #fff; font-size: var(--t-xs); font-weight: 700; line-height: 22px; text-align: center; align-self: center; }
+.t-sec-c:empty { display: none; }
 .t-alert { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 60px; padding: 10px 16px; border: 0; background: none; color: var(--label); text-align: left; }
 .t-alert + .t-alert { border-top: .5px solid var(--sep); }
 .t-alert-n { font-size: var(--t-md); font-weight: 600; }
@@ -679,8 +684,7 @@ body.kd-sheet-open { overflow: hidden; }
 
   <div id="t-sensei-box">
     <div class="t-sensei">
-      <label for="t-sensei">先生のお名前</label>
-      <input type="text" id="t-sensei" placeholder="例：保﨑先生" maxlength="20" onkeydown="if(event.key==='Enter'){tSaveSensei();}">
+      <input type="text" id="t-sensei" aria-label="先生のお名前" placeholder="先生のお名前を記入してください" maxlength="20" onkeydown="if(event.key==='Enter'){tSaveSensei();}">
       <button type="button" onclick="tSaveSensei()">決定</button>
     </div>
     <div class="t-sensei-note">一言へのいいね・コメントに、このお名前が出ます（この端末に保存）。</div>
@@ -688,7 +692,7 @@ body.kd-sheet-open { overflow: hidden; }
 
   <!-- 一言 -->
   <section id="t-pane-feed">
-    <div class="t-sec-h"><span class="t-sec-t">気になる部員</span><span class="t-sec-s">体調・充実度が続けて低い／1週間以上記録なし</span></div>
+    <div class="t-sec-h"><span class="t-sec-t">気になる部員</span><span class="t-sec-c" id="t-alert-c"></span><span class="t-sec-s">体調・充実度が続けて低い／1週間以上記録なし</span></div>
     <div id="t-alerts"><div class="t-ok"><span class="sk sk-line" style="width:60%"></span></div></div>
     <div class="t-sec-h"><span class="t-sec-t">部員の一言</span><span class="t-sec-s">名前を押すと、その部員の分析</span></div>
     <div class="hk-list" id="hk-list" aria-busy="true"></div>
@@ -1416,6 +1420,7 @@ let tAlertsLoaded = false;
 function tDrawAlerts() {
     const box = document.getElementById('t-alerts');
     if (!tAlertsLoaded) return;
+    document.getElementById('t-alert-c').textContent = tAlerts.length ? tAlerts.length + '人' : '';
     if (!tAlerts.length) { box.innerHTML = '<div class="t-ok">いまは、特に気になる部員はいません。</div>'; return; }
     box.innerHTML = '<div class="t-alerts">' + tAlerts.map(function(a, i) {
       return '<button type="button" class="t-alert" onclick="tOpen(tAlerts[' + i + '].name)">' + avatarHtml(a.name, 'ln')
