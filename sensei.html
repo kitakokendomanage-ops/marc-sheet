@@ -77,7 +77,7 @@
 /* ---------- 土台 ---------- */
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; background: var(--bg); }
-body { margin: 0; padding: 0 0 calc(88px + env(safe-area-inset-bottom)); background: var(--bg); color: var(--label);
+body { margin: 0; padding: 0 0 calc(24px + env(safe-area-inset-bottom)); background: var(--bg); color: var(--label);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic UI", Meiryo, sans-serif;
   font-size: var(--t-md); line-height: 1.5; -webkit-font-smoothing: antialiased; line-break: strict; }
 h1 { margin: 0; }
@@ -559,7 +559,7 @@ body.kd-sheet-open { overflow: hidden; }
 .kd-link-t { font-size: var(--t-md); font-weight: 600; }
 .kd-link-s { margin-top: 2px; font-size: var(--t-xs); color: var(--label2); }
 .kd-link-go { margin-left: auto; color: var(--label3); font-size: var(--t-lg); }
-.toast { position: fixed; left: 50%; bottom: calc(100px + env(safe-area-inset-bottom)); z-index: 950; width: max-content; max-width: min(calc(100vw - 32px), 420px); padding: 12px 20px; border-radius: var(--r-l); line-height: 1.5;
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); z-index: 950; width: max-content; max-width: min(calc(100vw - 32px), 420px); padding: 12px 20px; border-radius: var(--r-l); line-height: 1.5;
   background: rgba(28,30,36,.94); color: #fff; font-size: var(--t-md); text-align: center;
   transform: translateX(-50%) translateY(12px); opacity: 0; visibility: hidden; transition: opacity .2s, transform .2s, visibility .2s; }
 .toast.show { transform: translateX(-50%); opacity: 1; visibility: visible; transition: opacity .2s, transform .2s, visibility 0s; }
@@ -627,7 +627,7 @@ body.kd-sheet-open { overflow: hidden; }
 </style>
 <style id="kd-teacher">
 /* 先生用 */
-.t-wrap { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+.t-wrap { padding-bottom: 8px; }
 .t-sensei { display: flex; align-items: center; gap: 8px; margin: 12px 0; padding: 16px; border-radius: var(--r-l); background: var(--card); box-shadow: var(--card-shadow); }
 .t-sensei label { flex-shrink: 0; font-size: var(--t-sm); color: var(--label2); }
 .t-sensei input { flex: 1; min-width: 0; height: 44px; padding: 0 12px; border: 0; border-radius: var(--r-m); background: var(--raised); color: var(--label); font-size: var(--t-md); }
@@ -653,14 +653,6 @@ body.kd-sheet-open { overflow: hidden; }
 .t-tag { padding: 2px 8px; border-radius: var(--r-full); background: rgba(200,16,46,.10); color: var(--accent-ink); font-size: var(--t-xs); font-weight: 600; }
 .t-go { margin-left: auto; color: var(--label3); font-size: var(--t-lg); }
 .t-ok { padding: 16px; border-radius: var(--r-l); background: var(--card); box-shadow: var(--card-shadow); font-size: var(--t-sm); color: var(--label2); }
-/* 部員一覧 */
-.t-list { border-radius: var(--r-l); background: var(--card); box-shadow: var(--card-shadow); overflow: hidden; }
-.t-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 60px; padding: 8px 16px; border: 0; background: none; color: var(--label); text-align: left; }
-.t-row + .t-row { border-top: .5px solid var(--sep); }
-.t-row-n { font-size: var(--t-md); font-weight: 600; }
-.t-row-s { margin-top: 2px; font-size: var(--t-xs); color: var(--label2); }
-.t-row-s.late { color: var(--accent-ink); font-weight: 600; }
-.t-search { display: block; width: 100%; height: 44px; margin: 0 0 12px; padding: 0 16px; border: 0; border-radius: var(--r-m); background: var(--card); box-shadow: var(--card-shadow); color: var(--label); font-size: var(--t-md); }
 /* 一言：名前を押すと分析 */
 .ln-name.t-name { display: inline-flex; align-items: center; gap: 2px; padding: 0; border: 0; background: none; color: var(--tint); font-size: var(--t-xs); font-weight: 600; }
 .t-av { padding: 0; border: 0; background: none; border-radius: 50%; }
@@ -698,12 +690,6 @@ body.kd-sheet-open { overflow: hidden; }
     <div class="hk-list" id="hk-list" aria-busy="true"></div>
   </section>
 
-  <!-- 部員一覧 -->
-  <section id="t-pane-list" class="hidden">
-    <div class="t-sec-h"><span class="t-sec-t">部員一覧</span><span class="t-sec-s" id="t-list-n"></span></div>
-    <input type="search" class="t-search" id="t-search" placeholder="名前でさがす" oninput="tDrawList()">
-    <div class="t-list" id="t-list"></div>
-  </section>
 
   <!-- 個人の分析 -->
   <section id="t-pane-detail" class="hidden">
@@ -725,10 +711,6 @@ body.kd-sheet-open { overflow: hidden; }
   <footer class="site-footer">© 2026 MARC PROGRAM　無断転載・複製を禁じます<div class="site-footer-ver">ver. 2027-t1</div></footer>
 </div>
 
-<div class="diary-seg" role="tablist">
-  <button type="button" class="on" id="seg-feed" role="tab" aria-selected="true" onclick="tTab('feed')"><span class="seg-main"><span class="seg-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v10H10l-5 4z"/></svg></span><span class="seg-txt">部員の一言</span></span></button>
-  <button type="button" id="seg-list" role="tab" aria-selected="false" onclick="tTab('list')"><span class="seg-main"><span class="seg-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.2 2.9-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="9" r="2.6"/><path d="M15.5 14.2c2.6-.3 4.6 1.3 5 4.8"/></svg></span><span class="seg-txt">部員一覧</span></span></button>
-</div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -1442,7 +1424,7 @@ function tLoadFeed() {
       if (tDayKey(a) !== tDayKey(b)) return tDayKey(a) < tDayKey(b) ? 1 : -1;
       return (+String(b.id).split('|')[1] || 0) - (+String(a.id).split('|')[1] || 0);
     });
-    list.removeAttribute('aria-busy'); tDraw(); tDrawList(); tDrawAlerts(); if (!document.getElementById('t-pane-detail').classList.contains('hidden') && tName) document.getElementById('t-d-name').innerHTML = avatarHtml(tName, 'md') + '<span>' + escH(hkDn(tName)) + '</span>';
+    list.removeAttribute('aria-busy'); tDraw(); tDrawAlerts(); if (!document.getElementById('t-pane-detail').classList.contains('hidden') && tName) document.getElementById('t-d-name').innerHTML = avatarHtml(tName, 'md') + '<span>' + escH(hkDn(tName)) + '</span>';
   }).catch(function() { list.innerHTML = '<div class="kd-err">部員の一言を読み込めませんでした。<br><button type="button" onclick="tLoadFeed()">もう一度読み込む</button></div>'; });
 }
 function tDraw() {
@@ -1501,31 +1483,8 @@ function tSendCm(i) {
     .catch(function(e) { showToast('⚠ 送れませんでした（' + e.message + '）'); if (btn) { btn.disabled = false; btn.textContent = '送る'; } });
 }
 
-// ----- 部員一覧 -----
-let tStudents = [];
-function tLoadList() {
-  getJ({ action: 'teacherList' }).then(function(j) { tStudents = j.students || []; tDrawList(); })
-    .catch(function() { document.getElementById('t-list').innerHTML = '<div class="kd-err">読み込めませんでした。<br><button type="button" onclick="tLoadList()">もう一度読み込む</button></div>'; });
-}
-function tDrawList() {
-  const q = String((document.getElementById('t-search') || {}).value || '').replace(/[\s　]+/g, '');
-  const box = document.getElementById('t-list');
-  if (!box) return;
-  const today = jstKey(0);
-  const rows = tStudents.filter(function(s) { return !q || (s.display || '').indexOf(q) >= 0 || s.name.indexOf(q) >= 0; });
-  document.getElementById('t-list-n').textContent = tStudents.length ? tStudents.length + '人' : '';
-  if (!rows.length) { box.innerHTML = '<div class="t-ok">' + (tStudents.length ? '見つかりません' : 'まだ記録がありません') + '</div>'; return; }
-  box.innerHTML = rows.map(function(s) {
-    const days = s.lastMs ? Math.floor((Date.parse(today + 'T00:00:00+09:00') - s.lastMs) / 86400000) : 999;
-    const nm = JSON.stringify(s.name).replace(/"/g, '&quot;');
-    return '<button type="button" class="t-row" onclick="tOpen(' + nm + ')">' + avatarHtml(s.name, 'ln')
-      + '<span><span class="t-row-n">' + escH(s.display || hkDn(s.name)) + '</span><span class="t-row-s' + (days >= 7 ? ' late' : '') + '" style="display:block">記録 ' + s.count + '回・最後 ' + escH(s.last || '—') + (days >= 7 && days < 999 ? '（' + days + '日前）' : '') + '</span></span>'
-      + '<span class="t-go" aria-hidden="true">›</span></button>';
-  }).join('');
-}
-
 // ----- 個人の分析（部員の画面と同じ表示。期間だけ選べる） -----
-let tName = '', tRange = 30, tTabNow = 'feed', tReq = 0, tScroll = 0;
+let tName = '', tRange = 30, tReq = 0, tScroll = 0;
 const T_RANGE_LABEL = { 7: '1週間', 30: '1か月', 90: '3か月' };
 function daNext() { return ''; } // 「次の稽古へ」は部員への問いかけなので、先生用では出さない
 function openAnalysis() { tLoadDetail(); }
@@ -1534,7 +1493,6 @@ function tOpen(name) {
   document.getElementById('t-d-name').innerHTML = avatarHtml(name, 'md') + '<span>' + escH(hkDn(name)) + '</span>';
   document.querySelectorAll('.t-period button').forEach(function(b) { b.classList.toggle('on', b.dataset.r === '30'); });
   document.getElementById('t-pane-feed').classList.add('hidden');
-  document.getElementById('t-pane-list').classList.add('hidden');
   document.getElementById('t-pane-detail').classList.remove('hidden');
   window.scrollTo(0, 0);
   tLoadDetail();
@@ -1553,17 +1511,13 @@ function tLoadDetail() {
     el.innerHTML = '<div class="kd-err">分析を読み込めませんでした。<br><button type="button" onclick="tLoadDetail()">もう一度読み込む</button></div>';
   });
 }
-function tBack() { tTab(tTabNow, true); window.scrollTo(0, tScroll); }
-function tTab(k, keep) {
-  tTabNow = k;
+function tBack() {
   document.getElementById('t-pane-detail').classList.add('hidden');
-  document.getElementById('t-pane-feed').classList.toggle('hidden', k !== 'feed');
-  document.getElementById('t-pane-list').classList.toggle('hidden', k !== 'list');
-  ['feed', 'list'].forEach(function(x) { const b = document.getElementById('seg-' + x); b.classList.toggle('on', x === k); b.setAttribute('aria-selected', String(x === k)); });
-  if (!keep) window.scrollTo(0, 0);
+  document.getElementById('t-pane-feed').classList.remove('hidden');
+  window.scrollTo(0, tScroll);
 }
 document.addEventListener('DOMContentLoaded', function() {
-  tSensei(); tLoadAlerts(); tLoadFeed(); tLoadList();
+  tSensei(); tLoadAlerts(); tLoadFeed();
 });
 </script>
 </body>
