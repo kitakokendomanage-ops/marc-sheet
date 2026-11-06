@@ -107,10 +107,6 @@ input, textarea { -webkit-appearance: none; appearance: none; }
 .header.compact .header-subtitle { max-height: 0; margin-top: 0; opacity: 0; }
 .diary-who { display: flex; align-items: center; gap: 8px; min-width: 0; max-width: 46%; }
 .diary-who-label { display: none; }
-.who-chg { display: inline-flex; align-items: center; gap: 2px; }
-.who-chg::after { content: "▾"; flex-shrink: 0; color: var(--label3); font-size: var(--t-xs); }
-.who-t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.who-chg { padding: 4px 0; border: 0; background: none; color: var(--label); font-family: inherit; text-align: left; cursor: pointer; }
 .diary-who-name { font-size: var(--t-md); font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* アイコン（丸） */
@@ -634,7 +630,7 @@ body.kd-sheet-open { overflow: hidden; }
     <!-- 名前：保存済みなら表示のみ（変更はできない）。保存されていない端末でだけ入力欄と「決定」を出す -->
     <div class="diary-who" id="diary-who" style="display:none;">
       <span class="diary-who-label">名前</span>
-      <button type="button" class="diary-who-name who-chg" id="diary-who-name" onclick="kdNameChange()" aria-label="名前を変える"></button>
+      <span class="diary-who-name" id="diary-who-name"></span>
       <button type="button" class="av-btn" id="my-avatar" onclick="iconOpen()" aria-label="アイコンを選ぶ"></button>
     </div>
   </div>
@@ -1342,7 +1338,7 @@ function refreshDiaryWho() {
   if (!nameEl || !who || !row) return;
   const v = normNick(nameEl.value);
   if (v && !_diaryNameEditing) {
-    document.getElementById('diary-who-name').innerHTML = '<span class="who-t">' + escH(v) + '</span>';
+    document.getElementById('diary-who-name').textContent = v;
     who.style.display = 'flex';
     row.style.display = 'none';
   } else {
@@ -1362,19 +1358,6 @@ function kdGoName() {
   if (el) setTimeout(function() { el.focus({ preventScroll: true }); }, 350);
 }
 // 入力欄を出して入力をうながす。名前はこの端末で一度決めたら変えられないので、決まっていれば何もしない
-// 名前を変える（部内版のみ。前の名前の記録はシートにそのまま残る）
-function kdNameChange() {
-  const cur = confirmedNick();
-  kdSheetOpen('<div class="kd-sheet-t">名前を変えますか？</div>'
-    + '<div class="kd-sheet-s">いまの名前「' + escH(cur) + '」で書いた日記は、そのまま残ります。新しい名前を入れ直してください。</div>'
-    + '<div class="kd-sheet-btns"><button type="button" onclick="kdNameChangeGo()">名前を入れ直す</button>'
-    + '<button type="button" class="ghost" onclick="kdSheetClose()">やめる</button></div>', { noFocus: true });
-}
-function kdNameChangeGo() {
-  // 前の名前に結びついた既読の印も消す（新しい名前で届いた分を見落とさないように）
-  [LS_NAME, 'marc_oya_seen', 'kd_hk_seen'].forEach(function(k) { LS.remove(k); });
-  try { location.reload(); } catch (e) {}
-}
 function editDiaryName() {
   if (confirmedNick()) return;
   _diaryNameEditing = true;
