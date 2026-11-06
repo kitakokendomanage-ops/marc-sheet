@@ -1256,6 +1256,32 @@ window.addEventListener('unhandledrejection', function(e) {
 });
 
 
+// ===== 確認用：URLの最後に ?check=1 を付けて開くと、この端末の名前とGASの返事を画面の上に出す =====
+(function() {
+  if (!/[?&]check=1/.test(location.search)) return;
+  document.addEventListener('DOMContentLoaded', function() {
+    const box = document.createElement('pre');
+    box.style.cssText = 'margin:8px 16px;padding:12px;border-radius:12px;background:#111;color:#9f9;font-size:12px;line-height:1.5;white-space:pre-wrap;word-break:break-all;';
+    document.body.insertBefore(box, document.body.firstChild);
+    const name = confirmedNick();
+    const codes = Array.from(name).map(function(c) { return c + ':' + c.charCodeAt(0).toString(16); }).join(' ');
+    const lines = ['ページ ver：' + ((document.querySelector('.site-footer-ver') || {}).textContent || ''), 'この端末の名前：「' + name + '」', '文字コード：' + codes];
+    box.textContent = lines.join('\n') + '\n（GASに問い合わせ中…）';
+    const ask = function(label, params, sum) {
+      return fetch(kdUrl(params)).then(function(r) { return r.text(); }).then(function(t) {
+        let j = null; try { j = JSON.parse(t); } catch (e) {}
+        return label + '：' + (j ? sum(j) : '読めない返事 ' + t.slice(0, 120));
+      }).catch(function(e) { return label + '：通信エラー ' + e.message; });
+    };
+    Promise.all([
+      ask('GAS', {}, function(j) { return j.message || j.status; }),
+      ask('記録した日', { action: 'getMyDates', name: name }, function(j) { return j.status + (j.message ? ' ' + j.message : '') + ' / 今月 ' + j.monthCount + '回 / 直近の日 ' + (j.dates || []).join(','); }),
+      ask('分析', { action: 'analyzeDiary', name: name, days: 30 }, function(j) { return j.status + (j.message ? ' ' + j.message : '') + ' / 記録 ' + (j.totalRecords != null ? j.totalRecords : j.days) + '件'; }),
+      ask('仲間の一言', { action: 'getNews', name: name }, function(j) { return j.status + (j.message ? ' ' + j.message : '') + ' / ' + (j.hitokoto || []).length + '人分'; }),
+      ask('部員の名前（シート）', { action: 'teacherList' }, function(j) { return (j.students || []).map(function(x) { return x.name + '(' + x.count + ')'; }).join('、') || (j.message || j.status); })
+    ]).then(function(r) { box.textContent = lines.concat(r).join('\n'); });
+  });
+})();
 document.addEventListener('DOMContentLoaded', function() {
   loadDiaryName();
   setTimeout(pmLoad, 0);
