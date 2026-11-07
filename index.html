@@ -1324,7 +1324,11 @@ function normNick(v) {
 }
 // 入力中は端末に保存しない（「決定」で確定したときだけ保存する。打ちかけの名前でリアクション等が送られないように）
 function onDiaryNameInput(el) {
+  // 名前を打ち直したときだけ「記録がすでにあります」を閉じる。
+  // スマホは、変換の確定やボタンを押した瞬間にも入力の合図が出るので、中身が同じなら閉じない
+  // （前は閉じてしまい、「本人です」を押したつもりが下の「決定」に当たって、確認がくり返されていた）
   const t = document.getElementById('diary-name-taken');
+  if (t && t.dataset.name && normNick(el.value) === t.dataset.name) return;
   if (t) t.style.display = 'none';
 }
 
@@ -1422,6 +1426,9 @@ function kdClubConfirm() {
   if (!n) { showToast('⚠ 名前を入力してください'); if (el) el.focus(); return Promise.resolve(false); }
   el.value = n;
   if (n === confirmedNick()) { applyDiaryName(n); return Promise.resolve(true); }
+  // 「記録がすでにあります」を見たうえで、同じ名前のまま「決定」をもう一度押した → 本人として続ける
+  const tk = document.getElementById('diary-name-taken');
+  if (tk && tk.style.display === 'block' && tk.dataset.name === n) return kdClubJoin(n);
   if (_nameChecking) return Promise.resolve(false);
   _nameChecking = true;
   const ok = document.querySelector('.diary-name-ok');
@@ -1434,8 +1441,9 @@ function kdClubConfirm() {
       if (j && j.status === 'ok' && j.used) {
         const t = document.getElementById('diary-name-taken');
         if (t) {
+          t.dataset.name = n;
           t.innerHTML = '「' + escH(n) + '」の記録がすでにあります。同じ名前の人がいないか確かめてください。'
-            + '<button type="button" onclick="kdClubJoin(\'' + escH(n).replace(/'/g, '') + '\')">本人です（この名前で続ける）</button>';
+            + '<button type="button" onclick="kdClubJoinTaken()">本人です（この名前で続ける）</button>';
           t.style.display = 'block';
         }
         return false;
@@ -1443,6 +1451,11 @@ function kdClubConfirm() {
       return kdClubJoin(n);
     })
     .catch(function() { done(); showNameMsg('通信できませんでした。電波のよい所で、もう一度「決定」を押してください'); return false; });
+}
+function kdClubJoinTaken() {
+  const t = document.getElementById('diary-name-taken');
+  const n = t && t.dataset.name;
+  if (n) kdClubJoin(n);
 }
 function kdClubJoin(n) {
   // 北高版：部に入る手続きはGAS側に何もないので、通信を待たずにすぐ名前を決めて記録を読み込む
